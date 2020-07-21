@@ -1,0 +1,2 @@
+"SchoolId","SchoolName","ADOU","DefaultAccountEnabled"
+"00000000","Example School", "OU=School_Users,DC=lskysd,DC=ca","True"

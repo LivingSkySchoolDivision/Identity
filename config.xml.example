@@ -1,6 +1,12 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <Settings>
-  <SchoolLogic>
-    <ConnectionString>DATABASE CONNECTION STRING GOES HERE</ConnectionString>
-  </SchoolLogic>
+  <General>
+    <EmployeeType>Student</EmployeeType>
+  </General>
+  <Notifications>
+    <WebHookURL></WebHookURL>
+  </Notifications>
+  <ConnectionStrings>
+    <SchoolLogic>DATABASE CONNECTION STRING GOES HERE</SchoolLogic>
+  </ConnectionStrings>
 </Settings>
