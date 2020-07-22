@@ -1,5 +1,6 @@
 param (
     [Parameter(Mandatory=$true)][string]$SISExportFile,
+    [Parameter(Mandatory=$true)][string]$FacilityFile,
     [string]$ConfigFile
  )
 <#
@@ -23,6 +24,7 @@ param (
 
 ## Bring in functions from external files
 . ../Include/ADFunctions.ps1
+. ../Include/CSVFunctions.ps1
 
 ## Load config file 
 $AdjustedConfigFilePath = $ConfigFilePath
@@ -38,25 +40,44 @@ $EmployeeType = $configXml.Settings.General.EmployeeType
 $SISConnectionString = $configXML.Settings.ConnectionStrings.SchoolLogic
 $NotificationWebHookURL = $configXML.Settings.Notifications.WebHookURL
 
+
+## Load the list of schools from the ../db folder
+
+$Facilities = Get-Facilities -CSVFile $FacilityFile
+if ($Facilities.Count -lt 1) {
+    write-host "No facilities found. Exiting."
+    exit
+} else {
+    write-host $Facilities.Count "facilities found in import file."
+}
+
 ## Load the student records from the file.
 ## If the file doesn't exist or is empty, don't continue any further.
+
+$SourceUsers = Get-SourceUsers -CSVFile $SISExportFile
+
+if ($SourceUsers.Count -lt 1) {
+    write-host "No students from source system. Exiting"
+    exit
+} else {
+    write-host $SourceUsers.Count "student found in import file."
+}
 
 ## Get a list of all users currently in AD
 ## Only users with employeeID set AND 
 
-# $AllUsernames = Get-ADUsernames
+$AllSyncableUsers = Get-ADUsers -EmployeeType $EmployeeType
 
-$AllStudents = Get-ADUsers -EmployeeType $EmployeeType
-$AllStudentCount = $AllStudents.Count
+## Filter out syncable users who don't align with at least one facility
 
-write-host "Students:" $AllStudentCount
+
 
 
 ## Get a list of all usernames in the entire system.
 ## This should include ALL users, not just those that match the EmployeeType, because
 ## we need to be able to generate usernames that don't collide with other users.
 
-## Load the list of schools from the ../db folder
+$AllUsernames = Get-ADUsernames
 
 
 
