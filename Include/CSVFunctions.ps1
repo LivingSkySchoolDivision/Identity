@@ -4,7 +4,7 @@ function Get-SourceUsers {
         [Parameter(Mandatory=$true)][String] $CSVFile
     )
 
-    return import-csv $CSVFile -header('StudentID','LegalFirstName','LegalLastName','FirstName','LastName','MiddleName','BaseSchoolID','SchoolID','MinistryID','Email','DateOfBirth','UserName','Grade','HomeRoom')    
+    return import-csv $CSVFile -header('UserId','FirstName','LastName','MiddleName','BaseFacilityId','AdditionalFacilityId','Email','DateOfBirth','UserName','Grade','HomeRoom') | Select -skip 1
 }
 
 function Get-Facilities {
@@ -12,5 +12,5 @@ function Get-Facilities {
         [Parameter(Mandatory=$true)][String] $CSVFile
     )
 
-    return import-csv $CSVFile -header('SchoolName','SchoolDAN','SchoolId','DefaultAccountEnabled','ADOU')    
+    return import-csv $CSVFile -header('Name','FacilityDAN','FacilityId','DefaultAccountEnabled','ADOU','Groups') | Select -skip 1
 }

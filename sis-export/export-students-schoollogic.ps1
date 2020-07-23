@@ -1,6 +1,6 @@
 param (
     [Parameter(Mandatory=$true)][string]$OutFile,
-    [string]$ConfigFilePath
+    [string]$ConfigFile
  )
 
 ##############################################
@@ -11,15 +11,12 @@ param (
 # The output CSV file will use column names from your SQL query.
 # Rename them using "as" - example: "SELECT cFirstName as FirstName FROM Students"
 $SqlQuery = "SELECT
-                Student.cStudentNumber AS StudentID,
-                Student.cLegalFirstName AS LegalFirstName,
-                Student.cLegalLaStName AS LegalLastName,
+                Student.cStudentNumber AS UserId,
                 Student.cFirstName AS FirstName,
                 Student.cLaStName AS LastName,
                 cMiddlename AS MiddleName,
-                Student.iSchoolID AS BaseSchoolID,
-                SS.iSchoolID AS SchoolID,
-                cGovernmentNumber AS MinistryID,
+                Student.iSchoolID AS BaseFacilityId,
+                SS.iSchoolID AS AdditionalFacilityId,
                 Student.mEmail AS Email,
                 FORMAT(Student.dBirthdate, 'yyyy-MM-dd') AS DateOfBirth,
                 RTRIM(LTRIM(cUserName)) AS UserName,
@@ -48,7 +45,7 @@ $QuoteAllColumns = $false
 ##############################################
 
 # Find the config file
-$AdjustedConfigFilePath = $ConfigFilePath
+$AdjustedConfigFilePath = $ConfigFile
 if ($AdjustedConfigFilePath.Length -le 0) {
     $AdjustedConfigFilePath = join-path -Path $(Split-Path (Split-Path $MyInvocation.MyCommand.Path -Parent) -Parent) -ChildPath "config.xml"
 }
@@ -58,7 +55,7 @@ if ((test-path -Path $AdjustedConfigFilePath) -eq $false) {
     Throw "Config file not found. Specify using -ConfigFilePath. Defaults to config.xml in the directory above where this script is run from."
 }
 $configXML = [xml](Get-Content $AdjustedConfigFilePath)
-$ConnectionString = $configXML.Settings.SchoolLogic.ConnectionString
+$ConnectionString = $configXML.Settings.ConnectionStrings.SchoolLogic
 
 # Set up the SQL connection
 $SqlConnection = new-object System.Data.SqlClient.SqlConnection
