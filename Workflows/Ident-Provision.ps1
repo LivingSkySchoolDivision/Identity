@@ -153,24 +153,36 @@ foreach($ExistingEmployeeId in $ExistingActiveEmployeeIds)
 
 write-host "Found" $EmployeeIDsToDeprovision.Count "users to deprovision"
 
-## HOW TO DEPROVISION
-## -> Set employeeType to DeprovisionedStudent
 
-## CHECK IF WE NEED TO REPROVISION
-## -> When 
+## ############################################################
+## Reprovision existing deprovisioned users
+## ############################################################
+
+foreach($User in $UsersToReProvision) {
+    
+}
+
+## ############################################################
+## Deprovision users
+## ############################################################
+
+foreach($EmployeeId in $EmployeeIDsToDeprovision) {
+    
+}
+
+## ############################################################
+## Provision new users
+## ############################################################
+
+write-host "Getting all existing sAMAccountNames from AD..."
+#$AllUsernames = Get-ADUsernames
 
 
-## Get a list of all usernames in the entire system.
-## This should include ALL users, not just those that match the EmployeeType, because
-## we need to be able to generate usernames that don't collide with other users.
+foreach($NewUser in $UsersToProvision) {
+    $NewUsername = New-Username -FirstName $NewUser.FirstName -LastName $NewUser.LastName -UserId $NewUser.UserId -ExistingUsernames $AllUsernames
+    write-host "New username:" $NewUsername
+}
 
-## $AllUsernames = Get-ADUsernames
-
-
-
-## For each student record
-##  - If a corresponding AD user with the same EmployeeID exists, ignore them
-##  - If a user with the same EmployeeID (and EmployeeType) does not exist, create it in the appropriate OU
 
 ## Send teams webhook notification
 

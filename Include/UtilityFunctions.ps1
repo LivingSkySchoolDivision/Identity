@@ -41,16 +41,24 @@ function Remove-DuplicateRecords {
     return $validUsers
 }
 
+function Remove-NonAlphaCharacters {
+    param(
+        [Parameter(Mandatory=$true)][String] $InputString
+    )
+
+    return $InputString -replace '[^a-zA-Z0-9\.]',''
+}
 
 function New-Username {
     param(
         [Parameter(Mandatory=$true)][String] $FirstName,
         [Parameter(Mandatory=$true)][String] $LastName,
-        [Parameter(Mandatory=$true)][String] $StudentNumber,
-        [Parameter(Mandatory=$true)] $ExistingUsernames
-
+        [Parameter(Mandatory=$true)][String] $UserId,
+        [Parameter] $ExistingUsernames
     )
 
+    $newUsername = Remove-NonAlphaCharacters -InputString "$($FirstName.ToLower()).$($LastName.ToLower())"
 
-
+    
+    return $newUsername
 }
