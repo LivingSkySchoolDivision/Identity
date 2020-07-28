@@ -1,9 +1,10 @@
+
 function Get-ADUsernames {
-    $ADUserNames = New-Object Collections.Generic.List[String]
+    $ADUserNames = @()
     foreach($ADUser in Get-ADUser -Filter * -Properties sAMAccountName -ResultPageSize 2147483647 -Server "wad1-lskysd.lskysd.ca")
     {
         if ($ADUserNames.Contains($ADUser.sAMAccountName) -eq $false) {
-            $ADUserNames.Add($ADUser.sAMAccountName)
+            $ADUserNames += $ADUser.sAMAccountName.ToLower()
         }
     }
     return $ADUserNames | Sort-Object
@@ -29,8 +30,7 @@ function Get-SyncableEmployeeIDs {
         if ($employeeIDs.Contains($ADUser.EmployeeID) -eq $false) {
             $employeeIDs.Add($ADUser.EmployeeID)
         }  
-    }
-    
+    }    
 
     return $employeeIDs
 }

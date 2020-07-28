@@ -49,16 +49,42 @@ function Remove-NonAlphaCharacters {
     return $InputString -replace '[^a-zA-Z0-9\.]',''
 }
 
-function New-Username {
+function New-Username 
+{
     param(
         [Parameter(Mandatory=$true)][String] $FirstName,
         [Parameter(Mandatory=$true)][String] $LastName,
         [Parameter(Mandatory=$true)][String] $UserId,
-        [Parameter] $ExistingUsernames
+        [Parameter(Mandatory=$true)] $ExistingUsernames
     )
 
     $newUsername = Remove-NonAlphaCharacters -InputString "$($FirstName.ToLower()).$($LastName.ToLower())"
 
-    
+    # If it's longer than 19 characters
+
+    if ($newUsername.length -gt 19) 
+    {        
+        $newUsername = Remove-NonAlphaCharacters -InputString "$($FirstName.Substring(0,1).ToLower()).$($LastName.ToLower())"
+    }
+
+    # If it's still longer than 19 characters
+    if ($newUsername.length -gt 19) 
+    {        
+        $newUsername = Remove-NonAlphaCharacters -InputString "$($FirstName.Substring(0,1).ToLower()).$($LastName.Substring(0,17).ToLower())"
+    }
+
+    # If it exists already, start adding numbers    
+    if ($ExistingUsernames -Contains $newUsername) 
+    {
+        $tempUsername = $newUsername
+        $counter = 0
+        while($ExistingUsernames -Contains $tempUsername)
+        {
+            $counter++
+            $tempUsername = Remove-NonAlphaCharacters -InputString "$newUsername$counter"
+        }    
+        $newUsername = $tempUsername    
+    }
+   
     return $newUsername
 }

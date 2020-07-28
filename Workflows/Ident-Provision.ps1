@@ -175,14 +175,13 @@ foreach($EmployeeId in $EmployeeIDsToDeprovision) {
 ## ############################################################
 
 write-host "Getting all existing sAMAccountNames from AD..."
-#$AllUsernames = Get-ADUsernames
+$AllUsernames = Get-ADUsernames
 
-
+write-host "Making some new usernames..."
 foreach($NewUser in $UsersToProvision) {
     $NewUsername = New-Username -FirstName $NewUser.FirstName -LastName $NewUser.LastName -UserId $NewUser.UserId -ExistingUsernames $AllUsernames
-    write-host "New username:" $NewUsername
+    write-host "New username:" $NewUsername "($($NewUser.Firstname) $($NewUser.LastName))"
 }
-
 
 ## Send teams webhook notification
 
