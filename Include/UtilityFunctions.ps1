@@ -99,9 +99,9 @@ function Convert-GroupList
 
     foreach($str in $GroupString -Split ";")
     {
-        if ($str.Length -gt 0)
+        if ($str.Length.Trim() -gt 0)
         {
-            $GroupList += $str
+            $GroupList += $str.Trim()
         }
     }
 
