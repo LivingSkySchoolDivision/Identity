@@ -203,7 +203,7 @@ foreach($NewUser in $UsersToProvision) {
             $null = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown');
         }
     } else {
-        IgnoredUsers += $NewUser
+        $IgnoredUsers += $NewUser
     }
 }
 
