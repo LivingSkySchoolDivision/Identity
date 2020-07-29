@@ -88,3 +88,23 @@ function New-Username
    
     return $newUsername
 }
+
+function Convert-GroupList
+{
+    param(
+        [Parameter(Mandatory=$true)] $GroupString
+    )
+
+    $GroupList = @()
+
+    foreach($str in $GroupString -Split ";")
+    {
+        if ($str.Length -gt 0)
+        {
+            $GroupList += $str
+        }
+    }
+
+    return $GroupList
+
+}
