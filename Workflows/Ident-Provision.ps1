@@ -221,7 +221,7 @@ foreach($NewUser in $UsersToProvision) {
             $DisplayName = "$($NewUser.FirstName) $($NewUser.LastName)"
 
             # Make a CanonicalName
-            $CN = "$($NewUser.FirstName) $($NewUser.LastName) $($NewUser.UserId)"
+            $CN = "$($NewUser.FirstName.ToLower()) $($NewUser.LastName.ToLower()) $($NewUser.UserId)"
 
             # Generate a username for this user
             $NewUsername = New-Username -FirstName $NewUser.FirstName -LastName $NewUser.LastName -UserId $NewUser.UserId -ExistingUsernames $AllUsernames
@@ -243,7 +243,7 @@ foreach($NewUser in $UsersToProvision) {
                 Add-ADGroupMember -Identity $grp -Members $NewUsername
             }
 
-            write-host "New user:" $OU
+            write-host "New user:" "CN=$CN,$OU"
 
             # Debug
             Write-Host -NoNewLine 'Press any key to continue...';
