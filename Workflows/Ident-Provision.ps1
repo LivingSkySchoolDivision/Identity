@@ -248,6 +248,7 @@ foreach($NewUser in $UsersToProvision) {
             # Debug
             Write-Host -NoNewLine 'Press any key to continue...';
             $null = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown');
+            Start-Sleep -Milliseconds 3000
         }
     } else {
         IgnoredUsers += $NewUser
