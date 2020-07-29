@@ -164,7 +164,7 @@ foreach($NewUser in $UsersToProvision) {
         }
     }
 
-    if ($null -eq $ThisUserFacility)
+    if ($null -ne $ThisUserFacility)
     {
         # Don't provision for facilities that don't have an OU
         if ($ThisUserFacility.ADOU.Length -gt 1)
@@ -207,11 +207,7 @@ foreach($NewUser in $UsersToProvision) {
     }
 }
 
-write-host "Ignored users (invalid facilities)"
-foreach($NewUser in $IgnoredUsers)
-{
-    write-host $NewUser
-}
+
 
 ## Send teams webhook notification
 
