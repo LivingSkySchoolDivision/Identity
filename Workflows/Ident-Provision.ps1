@@ -41,10 +41,8 @@ if ((test-path -Path $AdjustedConfigFilePath) -eq $false) {
 $configXML = [xml](Get-Content $AdjustedConfigFilePath)
 $EmailDomain = $configXml.Settings.General.EmailDomain
 $ActiveEmployeeType = $configXml.Settings.General.ActiveEmployeeType
-$DeprovisionedOU = $configXml.Settings.General.DeprovisionedADOU
 $DeprovisionedEmployeeType = $configXml.Settings.General.DeprovisionedEmployeeType
 $NotificationWebHookURL = $configXML.Settings.Notifications.WebHookURL
-
 
 ## Load the list of schools from the ../db folder
 
@@ -71,18 +69,7 @@ if ($SourceUsers.Count -lt 1)
     write-host "No students from source system. Exiting"
     exit
 } else {
-    write-host $SourceUsers.Count "student found in import file."
-}
-
-## Make a List<string> of UserIDs from the source CSV so we can loop through it to find stuff more efficiently.
-
-$sourceUserIds = New-Object Collections.Generic.List[String]
-foreach($SourceUser in $SourceUsers)
-{
-    if ($sourceUserIds.Contains($SourceUser.UserId) -eq $false)
-    {
-        $sourceUserIds.Add($SourceUser.UserId)
-    }
+    write-host $SourceUsers.Count "students found in import file."
 }
 
 ## Get a list of all users currently in AD
@@ -141,22 +128,6 @@ write-host "Found" $UsersToReProvision.Count "deprovisioned users to reactivate.
 write-host "Adjusted to" $UsersToProvision.Count "users to create"
 
 ## ############################################################
-## Find users to delete
-## ############################################################
-
-$EmployeeIDsToDeprovision = @()
-foreach($ExistingEmployeeId in $ExistingActiveEmployeeIds)
-{
-    if ($sourceUserIds.Contains($ExistingEmployeeId) -eq $false)
-    {
-        $EmployeeIDsToDeprovision += $ExistingEmployeeId
-    }
-}
-
-write-host "Found" $EmployeeIDsToDeprovision.Count "users to deprovision"
-
-
-## ############################################################
 ## Reprovision existing deprovisioned users
 ## ############################################################
 
@@ -169,22 +140,6 @@ foreach($User in $UsersToReProvision) {
 
     # Move user to appropriate OU
 
-}
-
-## ############################################################
-## Deprovision users
-## ############################################################
-
-foreach($EmployeeId in $EmployeeIDsToDeprovision) {
-    # Set users employeeType
-
-    # Disable the account
-
-    # Add a comment to the user
-
-    # Move user to deprovision OU
-
-    write-host "Deprovision: "
 }
 
 ## ############################################################
@@ -209,7 +164,7 @@ foreach($NewUser in $UsersToProvision) {
         }
     }
 
-    if ($ThisUserFacility -ne $null)
+    if ($null -eq $ThisUserFacility)
     {
         # Don't provision for facilities that don't have an OU
         if ($ThisUserFacility.ADOU.Length -gt 1)
@@ -244,11 +199,8 @@ foreach($NewUser in $UsersToProvision) {
             }
 
             write-host "New user:" "CN=$CN,$OU"
-
-            # Debug
             Write-Host -NoNewLine 'Press any key to continue...';
             $null = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown');
-            Start-Sleep -Milliseconds 3000
         }
     } else {
         IgnoredUsers += $NewUser
