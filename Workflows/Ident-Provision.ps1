@@ -199,8 +199,6 @@ foreach($NewUser in $UsersToProvision) {
             }
 
             write-host "New user:" "CN=$CN,$OU"
-            Write-Host -NoNewLine 'Press any key to continue...';
-            $null = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown');
         }
     } else {
         $IgnoredUsers += $NewUser
