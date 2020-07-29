@@ -234,13 +234,13 @@ foreach($NewUser in $UsersToProvision) {
             $SecurePassword = ConvertTo-SecureString -String $Password -AsPlainText -Force
 
             # Create the user
-            New-ADUser -SamAccountName $NewUsername -AccountPassword $SecurePassword -UserPrincipalName $NewUsername -Name $CN -Enabled $true -DisplayName $DisplayName -GivenName $($NewUser.FirstName) -Surname $($NewUser.LastName) -ChangePasswordAtLogon $true -Department $($NewUser.Grade) -EmailAddress $NewEmail -Company $($ThisUserFacility.Name) -EmployeeID $($NewUser.UserId) -OtherAttributes @{'employeeType'="$ActiveEmployeeType"} -Confirm
+            New-ADUser -SamAccountName $NewUsername -AccountPassword $SecurePassword -UserPrincipalName $NewUsername -Name $CN -Enabled $true -DisplayName $DisplayName -GivenName $($NewUser.FirstName) -Surname $($NewUser.LastName) -ChangePasswordAtLogon $true -Department $($NewUser.Grade) -EmailAddress $NewEmail -Company $($ThisUserFacility.Name) -EmployeeID $($NewUser.UserId) -OtherAttributes @{'employeeType'="$ActiveEmployeeType";'jobTitle'="Student"} -Path $OU
 
             # Add the user to groups for this facility
             # TODO
             foreach($grp in (Convert-GroupList -GroupString $($ThisUserFacility.Groups)))
             {
-                Add-ADGroupMember -Confirm -Identity $grp -Members $NewUsername
+                Add-ADGroupMember -Identity $grp -Members $NewUsername
             }
 
             write-host "New user:" $OU
