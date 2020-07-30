@@ -121,8 +121,14 @@ foreach($EmployeeId in $EmployeeIDsToDeprovision) {
         # Add a comment to the user    
         #set-aduser $ADUser -Description "Deprovisioned: $DepTime" -Enabled $false -Department "Deprovisioned" -Office "Deprovisioned" -Replace @{'employeeType'="$DeprovisionedEmployeeType";'title'="$ActiveEmployeeType"}
     
+        # Remove all group memberships
+        foreach($Group in Get-ADPrincipalGroupMembership -Identity $ADUser)
+        {
+            Remove-ADGroupMember -Identity $Group -Members $ADUser
+        }
+
         # Move user to deprovision OU
-        move-ADObject -identity $ADUser -TargetPath $DeprovisionedADOU 
+        #move-ADObject -identity $ADUser -TargetPath $DeprovisionedADOU 
 
         Write-Host -NoNewLine 'Press any key to continue...';
         $null = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown');        
