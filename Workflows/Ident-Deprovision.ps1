@@ -124,7 +124,10 @@ foreach($EmployeeId in $EmployeeIDsToDeprovision) {
         # Remove all group memberships
         foreach($Group in Get-ADPrincipalGroupMembership -Identity $ADUser)
         {
-            Remove-ADGroupMember -Identity $Group -Members $ADUser -Confirm:$false
+            if ($Group.Name -ne "Domain Users")
+            {
+                Remove-ADGroupMember -Identity $Group -Members $ADUser -Confirm:$false
+            }
         }
 
         # Move user to deprovision OU
