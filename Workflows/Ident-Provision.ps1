@@ -189,10 +189,9 @@ foreach($NewUser in $UsersToProvision) {
             $SecurePassword = ConvertTo-SecureString -String $Password -AsPlainText -Force
 
             # Create the user
-            New-ADUser -SamAccountName $NewUsername -AccountPassword $SecurePassword -UserPrincipalName $NewEmail -Name $CN -Enabled $true -DisplayName $DisplayName -GivenName $($NewUser.FirstName) -Surname $($NewUser.LastName) -ChangePasswordAtLogon $true -Department $($NewUser.Grade) -EmailAddress $NewEmail -Company $($ThisUserFacility.Name) -EmployeeID $($NewUser.UserId) -OtherAttributes @{'employeeType'="$ActiveEmployeeType";'title'="Student"} -Path $OU
+            New-ADUser -SamAccountName $NewUsername -AccountPassword $SecurePassword -UserPrincipalName $NewEmail -Name $CN -Enabled $true -DisplayName $DisplayName -GivenName $($NewUser.FirstName) -Surname $($NewUser.LastName) -ChangePasswordAtLogon $true -Department $($NewUser.Grade) -EmailAddress $NewEmail -Company $($ThisUserFacility.Name) -EmployeeID $($NewUser.UserId) -OtherAttributes @{'employeeType'="$ActiveEmployeeType";'title'="$ActiveEmployeeType"} -Path $OU
 
             # Add the user to groups for this facility
-            # TODO
             foreach($grp in (Convert-GroupList -GroupString $($ThisUserFacility.Groups)))
             {
                 Add-ADGroupMember -Identity $grp -Members $NewUsername

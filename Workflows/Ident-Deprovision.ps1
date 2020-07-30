@@ -5,7 +5,7 @@ param (
  )
 <#
     .SYNOPSIS
-        Deprovisions user accounts that no longer exist in the system
+        Compares a list of users with users in an AD system, and deprovision.
     
     .DESCRIPTION
         This script removes users from AD/Azure who no longer exist in the Student Information System.
@@ -27,7 +27,6 @@ param (
 . ../Include/ADFunctions.ps1
 . ../Include/CSVFunctions.ps1
 
-
 ## Load config file
 $AdjustedConfigFilePath = $ConfigFilePath
 if ($AdjustedConfigFilePath.Length -le 0)
@@ -39,12 +38,10 @@ if ((test-path -Path $AdjustedConfigFilePath) -eq $false) {
     Throw "Config file not found. Specify using -ConfigFilePath. Defaults to config.xml in the directory above where this script is run from."
 }
 $configXML = [xml](Get-Content $AdjustedConfigFilePath)
-$EmailDomain = $configXml.Settings.General.EmailDomain
 $ActiveEmployeeType = $configXml.Settings.General.ActiveEmployeeType
-$DeprovisionedOU = $configXml.Settings.General.DeprovisionedADOU
 $DeprovisionedEmployeeType = $configXml.Settings.General.DeprovisionedEmployeeType
+$DeprovisionedADOU = $configXml.Settings.General.DeprovisionedADOU
 $NotificationWebHookURL = $configXML.Settings.Notifications.WebHookURL
-
 
 ## Load the list of schools from the ../db folder
 
@@ -91,58 +88,45 @@ foreach($SourceUser in $SourceUsers)
 $ExistingActiveEmployeeIds = Get-SyncableEmployeeIDs -EmployeeType $ActiveEmployeeType
 
 ## ############################################################
-## Find new users
-## ############################################################
-
-$UsersToProvision = @()
-if ($ExistingActiveEmployeeIds.Count -gt 0)
-{
-    # Find users in Source (import file) that don't exist in AD
-    foreach($SourceUser in $SourceUsers)
-    {
-        if ($ExistingActiveEmployeeIds.Contains($SourceUser.UserId) -eq $false)
-        {
-            $UsersToProvision += $SourceUser
-        }
-    }
-}
-
-write-host "Found" $UsersToProvision.Count "users to create"
-
-## ############################################################
 ## Find users to delete
 ## ############################################################
 
 $EmployeeIDsToDeprovision = @()
 foreach($ExistingEmployeeId in $ExistingActiveEmployeeIds)
 {
-    if ($sourceUserIds.Contains($ExistingEmployeeId) -eq $false)
+    if ($ExistingEmployeeId.Length -gt 0)
     {
-        $EmployeeIDsToDeprovision += $ExistingEmployeeId
+        if ($sourceUserIds.Contains($ExistingEmployeeId) -eq $false)
+        {
+            $EmployeeIDsToDeprovision += $ExistingEmployeeId
+        }
     }
 }
 
 write-host "Found" $EmployeeIDsToDeprovision.Count "users to deprovision"
-
 
 ## ############################################################
 ## Deprovision users
 ## ############################################################
 
 foreach($EmployeeId in $EmployeeIDsToDeprovision) {
-    # Find the user's DN
+    # Find the user's DN based on their employeeID   
+    foreach($ADUser in Get-AdUser -Filter {(EmployeeId -eq $EmployeeId) -and (EmployeeType -eq $ActiveEmployeeType)})
+    {
+        $DepTime = Get-Date 
+        write-host "Deprovisioning: $EmployeeId ($($ADUser))"
+
+        # Set users employeeType
+        # Disable the account
+        # Add a comment to the user    
+        #set-aduser $ADUser -Description "Deprovisioned: $DepTime" -Enabled $false -Department "Deprovisioned" -Office "Deprovisioned" -Replace @{'employeeType'="$DeprovisionedEmployeeType";'title'="$ActiveEmployeeType"}
     
+        # Move user to deprovision OU
+        move-ADObject -identity $ADUser -TargetPath $DeprovisionedADOU 
 
-
-    # Set users employeeType
-
-    # Disable the account
-
-    # Add a comment to the user
-
-    # Move user to deprovision OU
-
-    write-host "Deprovision: "
+        Write-Host -NoNewLine 'Press any key to continue...';
+        $null = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown');        
+    }
 }
 
 ## Send teams webhook notification
