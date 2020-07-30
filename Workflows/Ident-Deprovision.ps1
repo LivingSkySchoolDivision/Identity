@@ -119,11 +119,12 @@ foreach($EmployeeId in $EmployeeIDsToDeprovision) {
         # Set users employeeType
         # Disable the account
         # Add a comment to the user    
-        #set-aduser $ADUser -Description "Deprovisioned: $DepTime" -Enabled $false -Department "Deprovisioned" -Office "Deprovisioned" -Replace @{'employeeType'="$DeprovisionedEmployeeType";'title'="$ActiveEmployeeType"}
+        set-aduser $ADUser -Description "Deprovisioned: $DepTime" -Enabled $false -Department "Deprovisioned" -Office "Deprovisioned" -Replace @{'employeeType'="$DeprovisionedEmployeeType";'title'="$ActiveEmployeeType"}
     
         # Remove all group memberships
         foreach($Group in Get-ADPrincipalGroupMembership -Identity $ADUser)
         {
+            # Don't remove from "domain users", because it won't let you do this anyway (its the user's "default group").
             if ($Group.Name -ne "Domain Users")
             {
                 Remove-ADGroupMember -Identity $Group -Members $ADUser -Confirm:$false
@@ -131,7 +132,7 @@ foreach($EmployeeId in $EmployeeIDsToDeprovision) {
         }
 
         # Move user to deprovision OU
-        #move-ADObject -identity $ADUser -TargetPath $DeprovisionedADOU 
+        move-ADObject -identity $ADUser -TargetPath $DeprovisionedADOU 
 
         Write-Host -NoNewLine 'Press any key to continue...';
         $null = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown');        
