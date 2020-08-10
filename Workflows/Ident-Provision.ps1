@@ -23,9 +23,9 @@ param (
 ## ##################################################
 
 ## Bring in functions from external files
-. ../Include/UtilityFunctions.ps1
-. ../Include/ADFunctions.ps1
-. ../Include/CSVFunctions.ps1
+. ./../Include/UtilityFunctions.ps1
+. ./../Include/ADFunctions.ps1
+. ./../Include/CSVFunctions.ps1
 
 
 ## Load config file
