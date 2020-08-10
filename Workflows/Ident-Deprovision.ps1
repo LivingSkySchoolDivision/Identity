@@ -132,10 +132,7 @@ foreach($EmployeeId in $EmployeeIDsToDeprovision) {
         }
 
         # Move user to deprovision OU
-        move-ADObject -identity $ADUser -TargetPath $DeprovisionedADOU 
-
-        Write-Host -NoNewLine 'Press any key to continue...';
-        $null = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown');        
+        move-ADObject -identity $ADUser -TargetPath $DeprovisionedADOU       
     }
 }
 
