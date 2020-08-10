@@ -45,7 +45,6 @@ $DeprovisionedEmployeeType = $configXml.Settings.General.DeprovisionedEmployeeTy
 $NotificationWebHookURL = $configXML.Settings.Notifications.WebHookURL
 
 ## Load the list of schools from the ../db folder
-
 $Facilities = Get-Facilities -CSVFile $FacilityFile
 if ($Facilities.Count -lt 1)
 {
@@ -57,7 +56,6 @@ if ($Facilities.Count -lt 1)
 
 ## Load the student records from the file.
 ## If the file doesn't exist or is empty, don't continue any further.
-
 $SourceUsers = Remove-DuplicateRecords -UserList (
     Remove-UsersFromUnknownFacilities -UserList (
         Get-SourceUsers -CSVFile $SISExportFile
