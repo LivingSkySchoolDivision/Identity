@@ -76,7 +76,7 @@ if ($SourceUsers.Count -lt 1)
 foreach($SourceUser in $SourceUsers) {
     # Find an account for this user in AD
     
-    foreach($ADUser in Get-AdUser -Filter {(EmployeeId -eq $SourceUser.UserID) -and (EmployeeType -eq $ActiveEmployeeType)})
+    foreach($ADUser in Get-AdUser -Filter {(EmployeeId -eq $SourceUser.UserId) -and (EmployeeType -eq $ActiveEmployeeType)})
     {
         write-host "$($SourceUser.UserId):$($ADUser.sAMAccountName)"
     } 
