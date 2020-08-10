@@ -1,3 +1,4 @@
+import-module ActiveDirectory
 
 function Get-ADUsernames {
     $ADUserNames = @()
