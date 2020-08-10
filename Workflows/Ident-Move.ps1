@@ -73,11 +73,12 @@ if ($SourceUsers.Count -lt 1)
 ## Ensure that they are in the correct groups, based on any additional schools
 ## Ensure their "Office" includes the names of all of their schools
 
-foreach($SourceUser in $SourceUsers) {
+foreach($SourceUser in $SourceUsers) 
+{
     # Find an account for this user in AD
-    
-    foreach($ADUser in Get-AdUser -Filter {(EmployeeId -eq $SourceUser.UserId) -and (EmployeeType -eq $ActiveEmployeeType)})
+    $EmpID = $SourceUser.UserId
+    foreach($ADUser in Get-AdUser -Filter {(EmployeeId -eq $EmpID) -and (EmployeeType -eq $ActiveEmployeeType)})
     {
-        write-host "$($SourceUser.UserId):$($ADUser.sAMAccountName)"
-    } 
+        write-host " Found: $($ADUser.sAMAccountName)"
+    }
 }
