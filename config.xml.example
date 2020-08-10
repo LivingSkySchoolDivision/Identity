@@ -2,8 +2,8 @@
 <Settings>
   <General>
     <ActiveEmployeeType>Student</ActiveEmployeeType>
-    <DeprovisionedEmployeeType>DeprovisionedStudent</DeprovisionedEmployeeType>
-    <DeprovisionedADOU>OU=Students,OU=Orphaned Users,DC=lskysd,DC=ca</DeprovisionedADOU>
+    <DeprovisionedEmployeeType>FormerStudent</DeprovisionedEmployeeType>
+    <DeprovisionedADOU>OU=FormerStudents,OU=School_Users,DC=lskysd,DC=ca</DeprovisionedADOU>
     <EmailDomain>lskysd.ca</EmailDomain>
   </General>
   <Notifications>
