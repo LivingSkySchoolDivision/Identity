@@ -118,8 +118,8 @@ foreach($EmployeeId in $EmployeeIDsToDeprovision) {
 
         # Set users employeeType
         # Disable the account
-        # Add a comment to the user    
-        set-aduser $ADUser -Description "Deprovisioned: $DepTime" -Enabled $false -Department "Deprovisioned" -Office "Deprovisioned" -Replace @{'employeeType'="$DeprovisionedEmployeeType";'title'="$DeprovisionedEmployeeType"}
+        # Add a comment to the user 
+        set-aduser $ADUser -Description "Deprovisioned: $DepTime" -Enabled $true -Department "Deprovisioned" -Office "Deprovisioned" -Replace @{'employeeType'="$DeprovisionedEmployeeType";'title'="$DeprovisionedEmployeeType"}
     
         # Remove all group memberships
         foreach($Group in Get-ADPrincipalGroupMembership -Identity $ADUser)
