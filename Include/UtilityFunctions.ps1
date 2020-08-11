@@ -17,14 +17,14 @@ function Remove-UsersFromUnknownFacilities {
     foreach($User in $UserList) {
         if ($facilityIds.Contains($User.BaseFacilityId)) {
             $validUsers += $User
-        } else {
-            # The user's base facility wasn't valid, so try the additional facility instead            
-            if ($facilityIds.Contains($User.AdditionalFacilityId)) 
-            {
-                $User.BaseFacilityId = $User.AdditionalFacilityId
-                $validUsers += $User                
-            }
         }
+        # Don't attempt to fall back to the additional school, because if a student
+        # has multiple outside enrolments and their base school isn't valid, 
+        # they'll be constantly moved back and forth as the file gets processed.
+        # This could happen with the increase in distance ed.
+        # A student will _need_ a valid base school.
+        # To combat this, we could potentially create a fake school in the facilities file
+        # and use that somehow.
     }
 
     return $validUsers
