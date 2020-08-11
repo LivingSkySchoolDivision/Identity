@@ -1,7 +1,10 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <Settings>
   <General>
-    <EmployeeType>Student</EmployeeType>
+    <ActiveEmployeeType>Student</ActiveEmployeeType>
+    <DeprovisionedEmployeeType>FormerStudent</DeprovisionedEmployeeType>
+    <DeprovisionedADOU>OU=FormerStudents,OU=School_Users,DC=lskysd,DC=ca</DeprovisionedADOU>
+    <EmailDomain>lskysd.ca</EmailDomain>
   </General>
   <Notifications>
     <WebHookURL></WebHookURL>
