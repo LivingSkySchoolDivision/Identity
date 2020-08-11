@@ -50,7 +50,7 @@ if ($Facilities.Count -lt 1)
     Write-Log "No facilities found. Exiting."
     exit
 } else {
-    Write-Log $Facilities.Count "facilities found in import file."
+    Write-Log "$($Facilities.Count) facilities found in import file."
 }
 
 ## Load the student records from the file.
@@ -64,7 +64,7 @@ if ($SourceUsers.Count -lt 1)
     Write-Log "No students from source system. Exiting"
     exit
 } else {
-    Write-Log $SourceUsers.Count "students found in import file."
+    Write-Log "$($SourceUsers.Count) students found in import file."
 }
 
 # We'll need a list of existing AD usernames if we need to do any renames
