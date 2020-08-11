@@ -123,7 +123,7 @@ foreach($SourceUser in $SourceUsers)
         ## #####################################################################
         ## # Check if the user needs to be moved        
         ## #####################################################################
-        foreach($ADUser in Get-ADUser -Filter {(EmployeeId -eq $EmpID) -and ((EmployeeType -eq $ActiveEmployeeType) -or (EmployeeType -eq $DeprovisionedEmployeeType))} -Properties displayName,Department,Company,Office,Description,EmployeeType)
+        foreach($ADUser in Get-ADUser -Filter {(EmployeeId -eq $EmpID) -and ((EmployeeType -eq $ActiveEmployeeType) -or (EmployeeType -eq $DeprovisionedEmployeeType))} -Properties displayName,Department,Company,Office,Description,EmployeeType,title)
         {
             ## #####################################################################
             ## # Ensure the user is in the correct OU for their base facility.
@@ -176,7 +176,7 @@ foreach($SourceUser in $SourceUsers)
                 # If this user is being reprovisioned, reset some values
                 if ($ADUser.EmployeeType -eq $DeprovisionedEmployeeType) 
                 {
-                    set-aduser -Identity $ADUser -Description "" -Replace @{'employeeType'="$ActiveEmployeeType";'title'="$ActiveEmployeeType"}                   
+                    set-aduser $ADUser -Replace @{'employeeType'="$ActiveEmployeeType";'title'="$ActiveEmployeeType";'description'=""}                   
                 }
 
                 # Set new Company value
