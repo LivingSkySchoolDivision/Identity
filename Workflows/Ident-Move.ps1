@@ -176,7 +176,7 @@ foreach($SourceUser in $SourceUsers)
                 # If this user is being reprovisioned, reset some values
                 if ($ADUser.EmployeeType -eq $DeprovisionedEmployeeType) 
                 {
-                    set-aduser -Identity $ADUser -Description "" -OtherAttributes @{'employeeType'="$ActiveEmployeeType";'title'="$ActiveEmployeeType"}                   
+                    set-aduser -Identity $ADUser -Description "" -Replace @{'employeeType'="$ActiveEmployeeType";'title'="$ActiveEmployeeType"}                   
                 }
 
                 # Set new Company value
