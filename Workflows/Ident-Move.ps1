@@ -266,6 +266,13 @@ foreach($SourceUser in $SourceUsers)
             ## # additional facilities they may belong to.
             ## # Also check to make sure that this facility is listed in their "Department".
             ## #####################################################################
+
+            $userActualGroups = @()
+            foreach($adgroup in (get-adprincipalgroupmembership -Identity $ADUser)) 
+            {
+                $userActualGroups += $adgroup.name
+            }
+            
             if ($null -ne $AdditionalFacility)
             {                
                 if ($AdditionalFacility.FacilityDAN -ne $BaseFacility.FacilityDAN) 
@@ -278,13 +285,28 @@ foreach($SourceUser in $SourceUsers)
                         set-aduser -Identity $ADUser -Office $NewOffice
                     }
 
-                    # Add to groups for additional facility
-                    foreach($grp in (Convert-GroupList -GroupString $($AdditionalFacility.Groups)))
+                    # Check to make sure this user is in the correct groups for the additional facility
+                    foreach($grp in $(Convert-GroupList -GroupString $($AdditionalFacility.Groups)))
                     {
-                        Write-Log "Adding $($ADUser.userprincipalname) to group: $grp"
-                        Add-ADGroupMember -Identity $grp -Members $ADUser -Confirm:$false
+                        if ($userActualGroups -inotcontains $grp)
+                        {
+                            Write-Log "Adding $($ADUser.userprincipalname) to group: $grp"
+                            Add-ADGroupMember -Identity $grp -Members $ADUser -Confirm:$false
+                        }
                     }
 
+                }
+            }
+
+            ## #####################################################################
+            ## # Ensure this user is in the necesary groups for the primary facility
+            ## #####################################################################
+            foreach($grp in $(Convert-GroupList -GroupString $($BaseFacility.Groups)))
+            {
+                if ($userActualGroups -inotcontains $grp)
+                {
+                    Write-Log "Adding $($ADUser.userprincipalname) to group: $grp"
+                    Add-ADGroupMember -Identity $grp -Members $ADUser -Confirm:$false
                 }
             }
 
