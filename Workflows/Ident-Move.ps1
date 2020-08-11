@@ -161,8 +161,20 @@ foreach($SourceUser in $SourceUsers)
                     }
                 }
 
+                # Should the user account be enabled by default at the new site?
+                $AccountEnable = $false
+                if (
+                    ($BaseFacility.DefaultAccountEnabled.ToLower() -eq "true") -or 
+                    ($BaseFacility.DefaultAccountEnabled.ToLower() -eq "yes")  -or 
+                    ($BaseFacility.DefaultAccountEnabled.ToLower() -eq "y")  -or 
+                    ($BaseFacility.DefaultAccountEnabled.ToLower() -eq "t") 
+                )
+                {
+                    $AccountEnable = $true
+                }
+
                 # Set new Company value
-                set-ADUser -Identity $ADUser -Company $($BaseFacility.Name) -Office $($BaseFacility.Name)
+                set-ADUser -Identity $ADUser -Company $($BaseFacility.Name) -Office $($BaseFacility.Name) -Enabled $AccountEnable
 
                 # Actually move the object
                 move-ADObject -identity $ADUser -TargetPath $BaseFacility.ADOU

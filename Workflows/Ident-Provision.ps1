@@ -169,12 +169,24 @@ foreach($NewUser in $UsersToProvision) {
             # Generate an email for this user
             $NewEmail = "$($NewUsername)@$($EmailDomain)"
 
+            # Should the user be enable or disabled by default (based on facility)
+            $AccountEnable = $false
+            if (
+                ($ThisUserFacility.DefaultAccountEnabled.ToLower() -eq "true") -or 
+                ($ThisUserFacility.DefaultAccountEnabled.ToLower() -eq "yes")  -or 
+                ($ThisUserFacility.DefaultAccountEnabled.ToLower() -eq "y")  -or 
+                ($ThisUserFacility.DefaultAccountEnabled.ToLower() -eq "t") 
+            )
+            {
+                $AccountEnable = $true
+            }
+
             # Initial password
             $Password = "$($NewUser.FirstName.Substring(0,1).ToLower())$($NewUser.LastName.Substring(0,1).ToLower())-$($NewUser.UserId)"
             $SecurePassword = ConvertTo-SecureString -String $Password -AsPlainText -Force
 
             # Create the user
-            New-ADUser -SamAccountName $NewUsername -AccountPassword $SecurePassword -UserPrincipalName $NewEmail -Name $CN -Enabled $true -DisplayName $DisplayName -GivenName $($NewUser.FirstName) -Surname $($NewUser.LastName) -ChangePasswordAtLogon $true -Department "Grade $($NewUser.Grade)" -EmailAddress $NewEmail -Company $($ThisUserFacility.Name) -Office $($ThisUserFacility.Name) -EmployeeID $($NewUser.UserId) -OtherAttributes @{'employeeType'="$ActiveEmployeeType";'title'="$ActiveEmployeeType"} -Path $OU
+            New-ADUser -SamAccountName $NewUsername -AccountPassword $SecurePassword -UserPrincipalName $NewEmail -Name $CN -Enabled $AccountEnable -DisplayName $DisplayName -GivenName $($NewUser.FirstName) -Surname $($NewUser.LastName) -ChangePasswordAtLogon $true -Department "Grade $($NewUser.Grade)" -EmailAddress $NewEmail -Company $($ThisUserFacility.Name) -Office $($ThisUserFacility.Name) -EmployeeID $($NewUser.UserId) -OtherAttributes @{'employeeType'="$ActiveEmployeeType";'title'="$ActiveEmployeeType"} -Path $OU
 
             # Add the user to groups for this facility
             foreach($grp in (Convert-GroupList -GroupString $($ThisUserFacility.Groups)))
