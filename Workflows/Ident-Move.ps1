@@ -47,10 +47,10 @@ $NotificationWebHookURL = $configXML.Settings.Notifications.WebHookURL
 $Facilities = @(Get-Facilities -CSVFile $FacilityFile)
 if ($Facilities.Count -lt 1)
 {
-    write-host "No facilities found. Exiting."
+    Write-Log "No facilities found. Exiting."
     exit
 } else {
-    write-host $Facilities.Count "facilities found in import file."
+    Write-Log $Facilities.Count "facilities found in import file."
 }
 
 ## Load the student records from the file.
@@ -61,10 +61,10 @@ $SourceUsers = @(Remove-UsersFromUnknownFacilities -UserList (
 
 if ($SourceUsers.Count -lt 1)
 {
-    write-host "No students from source system. Exiting"
+    Write-Log "No students from source system. Exiting"
     exit
 } else {
-    write-host $SourceUsers.Count "students found in import file."
+    Write-Log $SourceUsers.Count "students found in import file."
 }
 
 # We'll need a list of existing AD usernames if we need to do any renames
@@ -139,7 +139,7 @@ foreach($SourceUser in $SourceUsers)
 
             # Check if this user is in the expected container
             if ($ParentContainer.ToLower() -ne $BaseFacility.ADOU.ToLower()) {
-                write-host "Moving $ADUser from $ParentContainer to $($BaseFacility.ADOU)"
+                Write-Log "Moving $ADUser from $ParentContainer to $($BaseFacility.ADOU)"
 
                 # Remove the user from any previous groups
                 # Get the security groups from the "previous" school, based on what OU he's in
@@ -156,7 +156,7 @@ foreach($SourceUser in $SourceUsers)
                 if ($null -ne $PreviousFacility) {
                     foreach($grp in (Convert-GroupList -GroupString $($PreviousFacility.Groups)))
                     {
-                        write-host "Removing $($ADUser.userprincipalname) from group: $grp"
+                        Write-Log "Removing $($ADUser.userprincipalname) from group: $grp"
                         remove-ADGroupMember -Identity $grp -Members $ADUser -Confirm:$false
                     }
                 }
@@ -170,13 +170,13 @@ foreach($SourceUser in $SourceUsers)
                 # Add user to new groups based on new facility
                 foreach($grp in (Convert-GroupList -GroupString $($BaseFacility.Groups)))
                 {
-                    write-host "Adding $($ADUser.userprincipalname) to group: $grp"
+                    Write-Log "Adding $($ADUser.userprincipalname) to group: $grp"
                     Add-ADGroupMember -Identity $grp -Members $ADUser -Confirm:$false
                 }
             }  
 
             if ($null -eq $ADUser) {
-                write-host "ADUser object is now null. Skipping until next run."
+                Write-Log "ADUser object is now null. Skipping until next run."
                 continue
             }
         }
@@ -207,7 +207,7 @@ foreach($SourceUser in $SourceUsers)
                     if ($OldUsername -ne $existingusername) {
                         $newAllUsernames += $existingusername
                     } else {
-                        write-host "Removed $OldUsername from known username list"
+                        Write-Log "Removed $OldUsername from known username list"
                     }
                 }
                 $AllUsernames = $newAllUsernames
@@ -220,7 +220,7 @@ foreach($SourceUser in $SourceUsers)
                 $AllUsernames += $NewUsername
 
                 # Apply the new samaccountname, displayname, firstname, lastname, userprincipalname, and mail
-                write-host "Renaming user $OldUsername to $NewUsername"
+                Write-Log "Renaming user $OldUsername to $NewUsername"
                 $ADUser = rename-adobject -Identity $ADUser -NewName $NewCN -PassThru
                 set-aduser $ADUser -SamAccountName $NewUsername -UserPrincipalName $NewEmail -DisplayName $DisplayName -GivenName $($SourceUser.FirstName) -Surname $($SourceUser.LastName) -EmailAddress $NewEmail
 
@@ -239,7 +239,7 @@ foreach($SourceUser in $SourceUsers)
             ## #####################################################################
             $GradeValue = "Grade $($SourceUser.Grade)"
             if ($GradeValue -ne $ADUser.Department) {
-                write-host "Updating grade for $($ADUser.userprincipalname) from $($ADUser.Department) to $GradeValue"
+                Write-Log "Updating grade for $($ADUser.userprincipalname) from $($ADUser.Department) to $GradeValue"
                 set-aduser -Identity $ADUser -Department $GradeValue
             }
 
@@ -256,14 +256,14 @@ foreach($SourceUser in $SourceUsers)
                     if ($ADUser.Office -inotmatch $AdditionalFacility.Name) 
                     {
                         $NewOffice = "$($ADUser.Office), $($AdditionalFacility.Name)"
-                        write-host "Setting $($ADUser)'s Office to: $NewOffice"
+                        Write-Log "Setting $($ADUser)'s Office to: $NewOffice"
                         set-aduser -Identity $ADUser -Office $NewOffice
                     }
 
                     # Add to groups for additional facility
                     foreach($grp in (Convert-GroupList -GroupString $($AdditionalFacility.Groups)))
                     {
-                        write-host "Adding $($ADUser.userprincipalname) to group: $grp"
+                        Write-Log "Adding $($ADUser.userprincipalname) to group: $grp"
                         Add-ADGroupMember -Identity $grp -Members $ADUser -Confirm:$false
                     }
 

@@ -48,10 +48,10 @@ $NotificationWebHookURL = $configXML.Settings.Notifications.WebHookURL
 $Facilities = @(Get-Facilities -CSVFile $FacilityFile)
 if ($Facilities.Count -lt 1)
 {
-    write-host "No facilities found. Exiting."
+    Write-Log "No facilities found. Exiting."
     exit
 } else {
-    write-host $Facilities.Count "facilities found in import file."
+    Write-Log $Facilities.Count "facilities found in import file."
 }
 
 ## Load the student records from the file.
@@ -64,10 +64,10 @@ $SourceUsers = @(Remove-DuplicateRecords -UserList (
 
 if ($SourceUsers.Count -lt 1)
 {
-    write-host "No students from source system. Exiting"
+    Write-Log "No students from source system. Exiting"
     exit
 } else {
-    write-host $SourceUsers.Count "students found in import file."
+    Write-Log $SourceUsers.Count "students found in import file."
 }
 
 ## Get a list of all users currently in AD
@@ -92,7 +92,7 @@ if ($ExistingActiveEmployeeIds.Count -gt 0)
     }
 }
 
-write-host "Found" $UsersToProvision.Count "users to create"
+Write-Log "Found" $UsersToProvision.Count "users to create"
 
 ## ############################################################
 ## Find users to re-provision
@@ -122,8 +122,8 @@ foreach($User in $UsersToProvision) {
 
 $UsersToProvision = $actualUsersToProvision
 
-write-host "Found" $UsersToReProvision.Count "deprovisioned users to reactivate."
-write-host "Adjusted to" $UsersToProvision.Count "users to create"
+Write-Log "Found" $UsersToReProvision.Count "deprovisioned users to reactivate."
+Write-Log "Adjusted to" $UsersToProvision.Count "users to create"
 
 # Reprovisioning will be handled by the "Move" script
 
@@ -131,11 +131,11 @@ write-host "Adjusted to" $UsersToProvision.Count "users to create"
 ## Provision new users
 ## ############################################################
 
-write-host "Getting all existing sAMAccountNames from AD..."
+Write-Log "Getting all existing sAMAccountNames from AD..."
 $AllUsernames = Get-ADUsernames
 
 $IgnoredUsers = @()
-write-host "Processing new users..."
+Write-Log "Processing new users..."
 foreach($NewUser in $UsersToProvision) {
 
     # Find the facility for this user
@@ -186,7 +186,7 @@ foreach($NewUser in $UsersToProvision) {
             # we'd end up with a duplicate in this script with similar names
             $AllUsernames += $NewUsername
 
-            write-host "New user:" "CN=$CN,$OU"
+            Write-Log "New user:" "CN=$CN,$OU"
         }
     } else {
         $IgnoredUsers += $NewUser

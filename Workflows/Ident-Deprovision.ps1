@@ -48,10 +48,10 @@ $NotificationWebHookURL = $configXML.Settings.Notifications.WebHookURL
 $Facilities = @(Get-Facilities -CSVFile $FacilityFile)
 if ($Facilities.Count -lt 1)
 {
-    write-host "No facilities found. Exiting."
+    Write-Log "No facilities found. Exiting."
     exit
 } else {
-    write-host $Facilities.Count "facilities found in import file."
+    Write-Log $Facilities.Count "facilities found in import file."
 }
 
 ## Load the student records from the file.
@@ -65,10 +65,10 @@ $SourceUsers = @(Remove-DuplicateRecords -UserList (
 
 if ($SourceUsers.Count -lt 1)
 {
-    write-host "No students from source system. Exiting"
+    Write-Log "No students from source system. Exiting"
     exit
 } else {
-    write-host $SourceUsers.Count "student found in import file."
+    Write-Log $SourceUsers.Count "student found in import file."
 }
 
 ## Make a List<string> of UserIDs from the source CSV so we can loop through it to find stuff more efficiently.
@@ -103,7 +103,7 @@ foreach($ExistingEmployeeId in $ExistingActiveEmployeeIds)
     }
 }
 
-write-host "Found" $EmployeeIDsToDeprovision.Count "users to deprovision"
+Write-Log "Found" $EmployeeIDsToDeprovision.Count "users to deprovision"
 
 ## ############################################################
 ## Deprovision users
@@ -114,7 +114,7 @@ foreach($EmployeeId in $EmployeeIDsToDeprovision) {
     foreach($ADUser in Get-AdUser -Filter {(EmployeeId -eq $EmployeeId) -and (EmployeeType -eq $ActiveEmployeeType)})
     {
         $DepTime = Get-Date 
-        write-host "Deprovisioning: $EmployeeId ($($ADUser))"
+        Write-Log "Deprovisioning: $EmployeeId ($($ADUser))"
 
         # Set users employeeType
         # Disable the account

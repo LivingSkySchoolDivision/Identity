@@ -115,3 +115,12 @@ function Convert-GroupList
     return $GroupList
 
 }
+
+function Write-Log
+{
+    param(
+        [Parameter(Mandatory=$true)] $Message
+    )
+
+    Write-Output $Message
+}
