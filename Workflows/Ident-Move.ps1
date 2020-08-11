@@ -107,6 +107,15 @@ foreach($SourceUser in $SourceUsers)
         }
     }
 
+    # If the base facility doesn't work, try to fall back to the additional facility
+    if ($null -eq $BaseFacility) 
+    {
+        if ($null -ne $AdditionalFacility) 
+        {
+            $BaseFacility = $AdditionalFacility
+        }
+    }
+
     ## #####################################################################
     ## # Only continue if the facility (from the source SIS file) is legit
     ## # (skipping schools that we don't want to make user accounts for)
@@ -117,6 +126,7 @@ foreach($SourceUser in $SourceUsers)
         ## #####################################################################
         ## # We need to do things in a few seperate loops, because several
         ## # lines below could break the reference returned by Get-ADUser
+        ## # This will not be very efficient.
         ## #####################################################################
         
         ## #####################################################################
