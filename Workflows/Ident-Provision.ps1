@@ -92,7 +92,7 @@ if ($ExistingActiveEmployeeIds.Count -gt 0)
     }
 }
 
-Write-Log "Found" $UsersToProvision.Count "users to create"
+Write-Log "Found $($UsersToProvision.Count) users to create"
 
 ## ############################################################
 ## Find users to re-provision
@@ -122,8 +122,8 @@ foreach($User in $UsersToProvision) {
 
 $UsersToProvision = $actualUsersToProvision
 
-Write-Log "Found" $UsersToReProvision.Count "deprovisioned users to reactivate."
-Write-Log "Adjusted to" $UsersToProvision.Count "users to create"
+Write-Log "Found $($UsersToReProvision.Count) deprovisioned users to reactivate."
+Write-Log "Adjusted to $($UsersToProvision.Count) users to create"
 
 # Reprovisioning will be handled by the "Move" script
 
@@ -186,7 +186,7 @@ foreach($NewUser in $UsersToProvision) {
             # we'd end up with a duplicate in this script with similar names
             $AllUsernames += $NewUsername
 
-            Write-Log "New user:" "CN=$CN,$OU"
+            Write-Log "New user: CN=$CN,$OU"
         }
     } else {
         $IgnoredUsers += $NewUser
