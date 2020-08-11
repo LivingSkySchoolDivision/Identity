@@ -123,7 +123,7 @@ foreach($SourceUser in $SourceUsers)
         ## #####################################################################
         ## # Check if the user needs to be moved        
         ## #####################################################################
-        foreach($ADUser in Get-ADUser -Filter {(EmployeeId -eq $EmpID) -and ((EmployeeType -eq $ActiveEmployeeType) -or (EmployeeType -eq $DeprovisionedEmployeeType))} -Properties displayName,Department,Company,Office,Description)
+        foreach($ADUser in Get-ADUser -Filter {(EmployeeId -eq $EmpID) -and ((EmployeeType -eq $ActiveEmployeeType) -or (EmployeeType -eq $DeprovisionedEmployeeType))} -Properties displayName,Department,Company,Office,Description,EmployeeType)
         {
             ## #####################################################################
             ## # Ensure the user is in the correct OU for their base facility.
