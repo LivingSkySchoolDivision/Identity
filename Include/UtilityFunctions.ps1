@@ -122,5 +122,5 @@ function Write-Log
         [Parameter(Mandatory=$true)] $Message
     )
 
-    Write-Output $Message
+    Write-Output "$(Get-Date -Format "yyyy-MM-dd HH:mm:ss K")> $Message"
 }
