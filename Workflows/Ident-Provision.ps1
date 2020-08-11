@@ -198,3 +198,5 @@ foreach($NewUser in $UsersToProvision) {
 ## Send teams webhook notification
 
 ## Send email notification
+
+Write-Log "Done."

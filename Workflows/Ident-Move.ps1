@@ -275,3 +275,9 @@ foreach($SourceUser in $SourceUsers)
     } # If facility isn't null
 
 }
+
+
+## Send teams webhook notification
+
+## Send email notification
+Write-Log "Done."
