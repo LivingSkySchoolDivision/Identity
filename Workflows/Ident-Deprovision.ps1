@@ -121,11 +121,13 @@ foreach($EmployeeId in $EmployeeIDsToDeprovision) {
 ## # As a clean-up, make sure that all AD objects with the employeetype
 ## # matching our deprovisioned employeetype are in the correct OU
 ## #####################################################################
-foreach($ADUser in Get-AdUser -Filter {(EmployeeType -eq $ActiveEmployeeType)})
+Write-Log "Housekeeping existing deprovisioned users..."
+foreach($ADUser in Get-AdUser -Filter {(EmployeeType -eq $DeprovisionedEmployeeType)})
 {
     $ParentContainer = $ADUser.DistinguishedName -replace '^.+?,(CN|OU.+)','$1'
     if ($ParentContainer -ne $DeprovisionedADOU) 
     {
+        Write-Log "Deprivisioned user $($ADUser.userprincipalname) is not in correct OU"
         Deprovision-User $ADUser -EmployeeType $DeprovisionedEmployeeType -DeprovisionOU $DeprovisionedADOU           
     }
 }    
