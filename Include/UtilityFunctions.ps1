@@ -17,6 +17,13 @@ function Remove-UsersFromUnknownFacilities {
     foreach($User in $UserList) {
         if ($facilityIds.Contains($User.BaseFacilityId)) {
             $validUsers += $User
+        } else {
+            # The user's base facility wasn't valid, so try the additional facility instead            
+            if ($facilityIds.Contains($User.AdditionalFacilityId)) 
+            {
+                $User.BaseFacilityId = $User.AdditionalFacilityId
+                $validUsers += $User                
+            }
         }
     }
 
