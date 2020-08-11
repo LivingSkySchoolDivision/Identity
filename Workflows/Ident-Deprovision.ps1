@@ -113,28 +113,23 @@ foreach($EmployeeId in $EmployeeIDsToDeprovision) {
     # Find the user's DN based on their employeeID   
     foreach($ADUser in Get-AdUser -Filter {(EmployeeId -eq $EmployeeId) -and (EmployeeType -eq $ActiveEmployeeType)})
     {
-        $DepTime = Get-Date 
-        Write-Log "Deprovisioning: $EmployeeId ($($ADUser))"
-
-        # Set users employeeType
-        # Disable the account
-        # Add a comment to the user 
-        set-aduser $ADUser -Description "Deprovisioned: $DepTime" -Enabled $true -Department "$DeprovisionedEmployeeType" -Office "$DeprovisionedEmployeeType" -Replace @{'employeeType'="$DeprovisionedEmployeeType";'title'="$DeprovisionedEmployeeType"}
-    
-        # Remove all group memberships
-        foreach($Group in Get-ADPrincipalGroupMembership -Identity $ADUser)
-        {
-            # Don't remove from "domain users", because it won't let you do this anyway (its the user's "default group").
-            if ($Group.Name -ne "Domain Users")
-            {
-                Remove-ADGroupMember -Identity $Group -Members $ADUser -Confirm:$false
-            }
-        }
-
-        # Move user to deprovision OU
-        move-ADObject -identity $ADUser -TargetPath $DeprovisionedADOU       
+        Deprovision-User $ADUser -EmployeeType $DeprovisionedEmployeeType -DeprovisionOU $DeprovisionedADOU              
     }
 }
+
+## #####################################################################
+## # As a clean-up, make sure that all AD objects with the employeetype
+## # matching our deprovisioned employeetype are in the correct OU
+## #####################################################################
+foreach($ADUser in Get-AdUser -Filter {(EmployeeType -eq $ActiveEmployeeType)})
+{
+    $ParentContainer = $ADUser.DistinguishedName -replace '^.+?,(CN|OU.+)','$1'
+    if ($ParentContainer -ne $DeprovisionedADOU) 
+    {
+        Deprovision-User $ADUser -EmployeeType $DeprovisionedEmployeeType -DeprovisionOU $DeprovisionedADOU           
+    }
+}    
+
 
 ## Send teams webhook notification
 
