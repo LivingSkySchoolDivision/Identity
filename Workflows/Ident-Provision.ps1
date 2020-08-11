@@ -149,18 +149,6 @@ foreach($NewUser in $UsersToProvision) {
         }
     }
 
-    # If the base facility doesn't work, lets try the additional facility
-    if ($null -eq $ThisUserFacility) 
-    {
-        foreach($Facility in $Facilities)
-        {
-            if ($Facility.FacilityId -eq $NewUser.AdditionalFacilityId)
-            {
-                $ThisUserFacility = $Facility
-            }
-        }
-    }
-
     if ($null -ne $ThisUserFacility)
     {
         # Don't provision for facilities that don't have an OU

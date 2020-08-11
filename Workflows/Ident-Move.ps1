@@ -107,15 +107,6 @@ foreach($SourceUser in $SourceUsers)
         }
     }
 
-    # If the base facility doesn't work, try to fall back to the additional facility
-    if ($null -eq $BaseFacility) 
-    {
-        if ($null -ne $AdditionalFacility) 
-        {
-            $BaseFacility = $AdditionalFacility
-        }
-    }
-
     ## #####################################################################
     ## # Only continue if the facility (from the source SIS file) is legit
     ## # (skipping schools that we don't want to make user accounts for)
