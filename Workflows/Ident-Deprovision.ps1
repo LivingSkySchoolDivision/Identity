@@ -103,7 +103,7 @@ foreach($ExistingEmployeeId in $ExistingActiveEmployeeIds)
     }
 }
 
-Write-Log "Found" $EmployeeIDsToDeprovision.Count "users to deprovision"
+Write-Log "Found $($EmployeeIDsToDeprovision.Count) users to deprovision"
 
 ## ############################################################
 ## Deprovision users
