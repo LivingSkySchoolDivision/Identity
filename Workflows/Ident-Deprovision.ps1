@@ -54,112 +54,119 @@ function Deprovision-User
     move-ADObject -identity $Identity -TargetPath $DeprovisionOU 
 }
 
-## Load config file
-$AdjustedConfigFilePath = $ConfigFilePath
-if ($AdjustedConfigFilePath.Length -le 0)
-{
-    $AdjustedConfigFilePath = join-path -Path $(Split-Path (Split-Path $MyInvocation.MyCommand.Path -Parent) -Parent) -ChildPath "config.xml"
-}
 
-if ((test-path -Path $AdjustedConfigFilePath) -eq $false) {
-    Throw "Config file not found. Specify using -ConfigFilePath. Defaults to config.xml in the directory above where this script is run from."
-}
-$configXML = [xml](Get-Content $AdjustedConfigFilePath)
-$ActiveEmployeeType = $configXml.Settings.General.ActiveEmployeeType
-$DeprovisionedEmployeeType = $configXml.Settings.General.DeprovisionedEmployeeType
-$DeprovisionedADOU = $configXml.Settings.General.DeprovisionedADOU
-$NotificationWebHookURL = $configXML.Settings.Notifications.WebHookURL
-
-## Load the list of schools from the ../db folder
-
-$Facilities = @(Get-Facilities -CSVFile $FacilityFile)
-if ($Facilities.Count -lt 1)
-{
-    Write-Log "No facilities found. Exiting."
-    exit
-} else {
-    Write-Log "$($Facilities.Count) facilities found in import file."
-}
-
-## Load the student records from the file.
-## If the file doesn't exist or is empty, don't continue any further.
-
-$SourceUsers = @(Remove-DuplicateRecords -UserList (
-    Remove-UsersFromUnknownFacilities -UserList (
-        Get-SourceUsers -CSVFile $SISExportFile
-        ) -FacilityList $Facilities
-    ))
-
-if ($SourceUsers.Count -lt 1)
-{
-    Write-Log "No students from source system. Exiting"
-    exit
-} else {
-    Write-Log "$($SourceUsers.Count) students found in import file."
-}
-
-## Make a List<string> of UserIDs from the source CSV so we can loop through it to find stuff more efficiently.
-
-$sourceUserIds = New-Object Collections.Generic.List[String]
-foreach($SourceUser in $SourceUsers)
-{
-    if ($sourceUserIds.Contains($SourceUser.UserId) -eq $false)
+Write-Log "Start deprovision script..."
+try {
+    ## Load config file
+    $AdjustedConfigFilePath = $ConfigFilePath
+    if ($AdjustedConfigFilePath.Length -le 0)
     {
-        $sourceUserIds.Add($SourceUser.UserId)
+        $AdjustedConfigFilePath = join-path -Path $(Split-Path (Split-Path $MyInvocation.MyCommand.Path -Parent) -Parent) -ChildPath "config.xml"
     }
-}
 
-## Get a list of all users currently in AD
-## Only users with employeeID set AND employeeType set to the specified one from the config file.
+    if ((test-path -Path $AdjustedConfigFilePath) -eq $false) {
+        Throw "Config file not found. Specify using -ConfigFilePath. Defaults to config.xml in the directory above where this script is run from."
+    }
+    $configXML = [xml](Get-Content $AdjustedConfigFilePath)
+    $ActiveEmployeeType = $configXml.Settings.General.ActiveEmployeeType
+    $DeprovisionedEmployeeType = $configXml.Settings.General.DeprovisionedEmployeeType
+    $DeprovisionedADOU = $configXml.Settings.General.DeprovisionedADOU
+    $NotificationWebHookURL = $configXML.Settings.Notifications.WebHookURL
 
-$ExistingActiveEmployeeIds = Get-SyncableEmployeeIDs -EmployeeType $ActiveEmployeeType
+    ## Load the list of schools from the ../db folder
 
-## ############################################################
-## Find users to delete
-## ############################################################
-
-$EmployeeIDsToDeprovision = @()
-foreach($ExistingEmployeeId in $ExistingActiveEmployeeIds)
-{
-    if ($ExistingEmployeeId.Length -gt 0)
+    $Facilities = @(Get-Facilities -CSVFile $FacilityFile)
+    if ($Facilities.Count -lt 1)
     {
-        if ($sourceUserIds.Contains($ExistingEmployeeId) -eq $false)
+        Write-Log "No facilities found. Exiting."
+        exit
+    } else {
+        Write-Log "$($Facilities.Count) facilities found in import file."
+    }
+
+    ## Load the student records from the file.
+    ## If the file doesn't exist or is empty, don't continue any further.
+
+    $SourceUsers = @(Remove-DuplicateRecords -UserList (
+        Remove-UsersFromUnknownFacilities -UserList (
+            Get-SourceUsers -CSVFile $SISExportFile
+            ) -FacilityList $Facilities
+        ))
+
+    if ($SourceUsers.Count -lt 1)
+    {
+        Write-Log "No students from source system. Exiting"
+        exit
+    } else {
+        Write-Log "$($SourceUsers.Count) students found in import file."
+    }
+
+    ## Make a List<string> of UserIDs from the source CSV so we can loop through it to find stuff more efficiently.
+
+    $sourceUserIds = New-Object Collections.Generic.List[String]
+    foreach($SourceUser in $SourceUsers)
+    {
+        if ($sourceUserIds.Contains($SourceUser.UserId) -eq $false)
         {
-            $EmployeeIDsToDeprovision += $ExistingEmployeeId
+            $sourceUserIds.Add($SourceUser.UserId)
         }
     }
-}
 
-Write-Log "Found $($EmployeeIDsToDeprovision.Count) users to deprovision"
+    ## Get a list of all users currently in AD
+    ## Only users with employeeID set AND employeeType set to the specified one from the config file.
 
-## ############################################################
-## Deprovision users
-## ############################################################
+    $ExistingActiveEmployeeIds = Get-SyncableEmployeeIDs -EmployeeType $ActiveEmployeeType
 
-foreach($EmployeeId in $EmployeeIDsToDeprovision) {
-    # Find the user's DN based on their employeeID   
-    foreach($ADUser in Get-AdUser -Filter {(EmployeeId -eq $EmployeeId) -and (EmployeeType -eq $ActiveEmployeeType)})
+    ## ############################################################
+    ## Find users to delete
+    ## ############################################################
+
+    $EmployeeIDsToDeprovision = @()
+    foreach($ExistingEmployeeId in $ExistingActiveEmployeeIds)
     {
-        Deprovision-User $ADUser -EmployeeType $DeprovisionedEmployeeType -DeprovisionOU $DeprovisionedADOU              
+        if ($ExistingEmployeeId.Length -gt 0)
+        {
+            if ($sourceUserIds.Contains($ExistingEmployeeId) -eq $false)
+            {
+                $EmployeeIDsToDeprovision += $ExistingEmployeeId
+            }
+        }
     }
-}
 
-## #####################################################################
-## # As a clean-up, make sure that all AD objects with the employeetype
-## # matching our deprovisioned employeetype are in the correct OU
-## #####################################################################
-Write-Log "Housekeeping existing deprovisioned users..."
-foreach($ADUser in Get-AdUser -Filter {(EmployeeType -eq $DeprovisionedEmployeeType)})
-{
-    $ParentContainer = $ADUser.DistinguishedName -replace '^.+?,(CN|OU.+)','$1'
-    if ($ParentContainer -ne $DeprovisionedADOU) 
+    Write-Log "Found $($EmployeeIDsToDeprovision.Count) users to deprovision"
+
+    ## ############################################################
+    ## Deprovision users
+    ## ############################################################
+
+    foreach($EmployeeId in $EmployeeIDsToDeprovision) {
+        # Find the user's DN based on their employeeID   
+        foreach($ADUser in Get-AdUser -Filter {(EmployeeId -eq $EmployeeId) -and (EmployeeType -eq $ActiveEmployeeType)})
+        {
+            Deprovision-User $ADUser -EmployeeType $DeprovisionedEmployeeType -DeprovisionOU $DeprovisionedADOU              
+        }
+    }
+
+    ## #####################################################################
+    ## # As a clean-up, make sure that all AD objects with the employeetype
+    ## # matching our deprovisioned employeetype are in the correct OU
+    ## #####################################################################
+    Write-Log "Housekeeping existing deprovisioned users..."
+    foreach($ADUser in Get-AdUser -Filter {(EmployeeType -eq $DeprovisionedEmployeeType)})
     {
-        Write-Log "Deprivisioned user $($ADUser.userprincipalname) is not in correct OU"
-        Deprovision-User $ADUser -EmployeeType $DeprovisionedEmployeeType -DeprovisionOU $DeprovisionedADOU           
-    }
-}    
+        $ParentContainer = $ADUser.DistinguishedName -replace '^.+?,(CN|OU.+)','$1'
+        if ($ParentContainer -ne $DeprovisionedADOU) 
+        {
+            Write-Log "Deprivisioned user $($ADUser.userprincipalname) is not in correct OU. Moving."
+            Deprovision-User $ADUser -EmployeeType $DeprovisionedEmployeeType -DeprovisionOU $DeprovisionedADOU           
+        }
+    }    
 
-## Send teams webhook notification
+    ## Send teams webhook notification
 
-## Send email notification
-Write-Log "Done."
+    ## Send email notification
+}
+catch {
+    Write-Log $_
+}
+Write-Log "Finished deprovisioning."
