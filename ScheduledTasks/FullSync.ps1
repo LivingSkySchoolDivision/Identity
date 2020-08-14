@@ -109,7 +109,7 @@ if ((Test-Path $InFilePath) -eq $false) {
 
 Write-Log "Calling Provision script..." >> $LogFile
 try {
-    powershell -NoProfile -File ../Workflows/Ident-Provision.ps1 -ConfigFile $ConfigFilePath -SISExportFile $InFilePath -FacilityFile $FacilityFilePath >> $LogFile
+    powershell -NoProfile -File ../Tasks-Students/Ident-Provision.ps1 -ConfigFile $ConfigFilePath -SISExportFile $InFilePath -FacilityFile $FacilityFilePath >> $LogFile
 } 
 catch {
     Write-Log "Exception running move/update script."
@@ -122,7 +122,7 @@ catch {
 
 Write-Log "Calling Deprovision script..." >> $LogFile
 try {
-    powershell -NoProfile -File ../Workflows/Ident-DeProvision.ps1 -ConfigFile $ConfigFilePath -SISExportFile $InFilePath -FacilityFile $FacilityFilePath >> $LogFile
+    powershell -NoProfile -File ../Tasks-Students/Ident-DeProvision.ps1 -ConfigFile $ConfigFilePath -SISExportFile $InFilePath -FacilityFile $FacilityFilePath >> $LogFile
 } 
 catch {
     Write-Log "Exception running move/update script."
@@ -135,7 +135,7 @@ catch {
 
 Write-Log "Calling Move script..." >> $LogFile
 try {
-    powershell -NoProfile -File ../Workflows/Ident-Move.ps1 -ConfigFile $ConfigFilePath -SISExportFile $InFilePath -FacilityFile $FacilityFilePath >> $LogFile
+    powershell -NoProfile -File ../Tasks-Students/Ident-Move.ps1 -ConfigFile $ConfigFilePath -SISExportFile $InFilePath -FacilityFile $FacilityFilePath >> $LogFile
 } 
 catch {
     Write-Log "Exception running move script."
@@ -148,7 +148,7 @@ catch {
 
 Write-Log "Calling Update script..." >> $LogFile
 try {
-    powershell -NoProfile -File ../Workflows/Ident-Update.ps1 -ConfigFile $ConfigFilePath -SISExportFile $InFilePath -FacilityFile $FacilityFilePath >> $LogFile
+    powershell -NoProfile -File ../Tasks-Students/Ident-Update.ps1 -ConfigFile $ConfigFilePath -SISExportFile $InFilePath -FacilityFile $FacilityFilePath >> $LogFile
 } 
 catch {
     Write-Log "Exception running update script."
