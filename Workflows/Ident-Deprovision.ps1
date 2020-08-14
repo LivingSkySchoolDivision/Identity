@@ -37,21 +37,27 @@ function Deprovision-User
 
     Write-Log "Deprovisioning: $EmployeeId ($($ADUser))"
 
-    $DepTime = Get-Date  
-    set-aduser $Identity -Description "Deprovisioned: $DepTime" -Enabled $true -Department "$DeprovisionedEmployeeType" -Office "$DeprovisionedEmployeeType" -Replace @{'employeeType'="$DeprovisionedEmployeeType";'title'="$DeprovisionedEmployeeType"}
+    try {
+        $DepTime = Get-Date  
+        set-aduser $Identity -Description "Deprovisioned: $DepTime" -Enabled $true -Department "$DeprovisionedEmployeeType" -Office "$DeprovisionedEmployeeType" -Replace @{'employeeType'="$DeprovisionedEmployeeType";'title'="$DeprovisionedEmployeeType"}
 
-    # Remove all group memberships
-    foreach($Group in Get-ADPrincipalGroupMembership -Identity $Identity)
-    {
-        # Don't remove from "domain users", because it won't let you do this anyway (its the user's "default group").
-        if ($Group.Name -ne "Domain Users")
+        # Remove all group memberships
+        foreach($Group in Get-ADPrincipalGroupMembership -Identity $Identity)
         {
-            Remove-ADGroupMember -Identity $Group -Members $Identity -Confirm:$false
+            # Don't remove from "domain users", because it won't let you do this anyway (its the user's "default group").
+            if ($Group.Name -ne "Domain Users")
+            {
+                Remove-ADGroupMember -Identity $Group -Members $Identity -Confirm:$false
+            }
         }
-    }
 
-    # Move user to deprovision OU
-    move-ADObject -identity $Identity -TargetPath $DeprovisionOU 
+        # Move user to deprovision OU
+        move-ADObject -identity $Identity -TargetPath $DeprovisionOU 
+    }
+    catch {
+        Write-Log "Failed to deprovision $Identity (exception follows)"
+        Write-Log $_
+    }
 }
 
 

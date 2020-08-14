@@ -70,6 +70,7 @@ try {
     }
 
     # We'll need a list of existing AD usernames if we need to do any renames
+    Write-Log "Caching all AD usernames..."
     $AllUsernames = Get-ADUsernames
 
     # For each active student (in the import file)
@@ -78,6 +79,7 @@ try {
     ## Ensure that they are in the correct groups, based on any additional schools
     ## Ensure their "Office" includes the names of all of their schools
 
+    Write-Log "Processing users..."
     foreach($SourceUser in $SourceUsers)
     {
         # Find an account for this user in AD
