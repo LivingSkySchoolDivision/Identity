@@ -127,7 +127,16 @@ try {
     Write-Log "Found $($UsersToReProvision.Count) deprovisioned users to reactivate."
     Write-Log "Adjusted to $($UsersToProvision.Count) users to create"
 
-    # Reprovisioning will be handled by the "Move" script
+    
+    ## ############################################################
+    ## Stop if there's nothing to do
+    ## ############################################################
+
+    if (($UsersToProvision.Count -eq 0) -and ($UsersToReprovision.Count -eq 0)) 
+    {
+        Write-Log "No work to do - exiting."
+        exit
+    }
 
     ## ############################################################
     ## Provision new users
