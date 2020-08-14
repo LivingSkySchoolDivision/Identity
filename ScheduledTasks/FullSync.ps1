@@ -117,19 +117,6 @@ catch {
 }
 
 ## #########################################################
-## # Move accounts and update account properties
-## #########################################################
-
-Write-Log "Calling Move/Update script..." >> $LogFile
-try {
-    powershell -NoProfile -File ../Workflows/Ident-Move.ps1 -ConfigFile $ConfigFilePath -SISExportFile $InFilePath -FacilityFile $FacilityFilePath >> $LogFile
-} 
-catch {
-    Write-Log "Exception running move/update script."
-    Write-Log $_
-}
-
-## #########################################################
 ## # Deprovision accounts no longer needed
 ## #########################################################
 
@@ -139,6 +126,32 @@ try {
 } 
 catch {
     Write-Log "Exception running move/update script."
+    Write-Log $_
+}
+
+## #########################################################
+## # Move accounts (and reprovision)
+## #########################################################
+
+Write-Log "Calling Move script..." >> $LogFile
+try {
+    powershell -NoProfile -File ../Workflows/Ident-Move.ps1 -ConfigFile $ConfigFilePath -SISExportFile $InFilePath -FacilityFile $FacilityFilePath >> $LogFile
+} 
+catch {
+    Write-Log "Exception running move script."
+    Write-Log $_
+}
+
+## #########################################################
+## # Update account groups and properties
+## #########################################################
+
+Write-Log "Calling Update script..." >> $LogFile
+try {
+    powershell -NoProfile -File ../Workflows/Ident-Update.ps1 -ConfigFile $ConfigFilePath -SISExportFile $InFilePath -FacilityFile $FacilityFilePath >> $LogFile
+} 
+catch {
+    Write-Log "Exception running update script."
     Write-Log $_
 }
 

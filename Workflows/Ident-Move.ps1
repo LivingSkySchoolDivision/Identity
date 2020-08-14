@@ -27,7 +27,7 @@ param (
 . ./../Include/ADFunctions.ps1
 . ./../Include/CSVFunctions.ps1
 
-Write-Log "Start move and update script..."
+Write-Log "Start move script..."
 try {
     ## Load config file
     $AdjustedConfigFilePath = $ConfigFilePath
@@ -206,134 +206,19 @@ try {
                 }
             }
 
-            ## #####################################################################
-            ## # Check if the user needs to be renamed        
-            ## #####################################################################
-            foreach($ADUser in Get-ADUser -Filter {(EmployeeId -eq $EmpID) -and ((EmployeeType -eq $ActiveEmployeeType) -or (EmployeeType -eq $DeprovisionedEmployeeType))} -Properties displayName,Department,Company,Office)
-            {
-                ## #####################################################################
-                ## # Check if this user's first or last name has changed.
-                ## #
-                ## # If so, we'll need to update the new name, and make a new username
-                ## # and email address for the user.
-                ## #####################################################################
-
-                $DisplayName = "$($SourceUser.FirstName) $($SourceUser.LastName)"
-
-                # If the display name is different than expected, make a new username and
-                # make a new email address
-                if ($DisplayName.ToLower() -ne $ADUser.displayName.ToLower())
-                {
-                    $OldUsername = $ADUser.samaccountname
-
-                    # If old username exists in the big list of usernames, remove it
-                    $newAllUsernames = @()
-                    foreach($existingusername in $AllUsernames) {
-                        if ($OldUsername -ne $existingusername) {
-                            $newAllUsernames += $existingusername
-                        } else {
-                            Write-Log "Removed $OldUsername from known username list"
-                        }
-                    }
-                    $AllUsernames = $newAllUsernames
-
-                    $NewUsername = New-Username -FirstName $SourceUser.FirstName -LastName $SourceUser.LastName -UserId $SourceUser.UserId -ExistingUsernames $AllUsernames
-                    $NewEmail = "$($NewUsername)@$($EmailDomain)"
-                    $NewCN = "$($SourceUser.FirstName.ToLower()) $($SourceUser.LastName.ToLower()) $($SourceUser.UserId)"
-
-                    # Insert the new username into the list
-                    $AllUsernames += $NewUsername
-
-                    # Apply the new samaccountname, displayname, firstname, lastname, userprincipalname, and mail
-                    Write-Log "Renaming user $OldUsername to $NewUsername"
-                    $ADUser = rename-adobject -Identity $ADUser -NewName $NewCN -PassThru
-                    set-aduser $ADUser -SamAccountName $NewUsername -UserPrincipalName $NewEmail -DisplayName $DisplayName -GivenName $($SourceUser.FirstName) -Surname $($SourceUser.LastName) -EmailAddress $NewEmail
-
-                    # TODO: Probably need to add/remove things from the "proxyAddress" field to handle default email aliases here
-                    #       This field is not a simple string though, and may contain things we don't want to touch.
-                }
-            }
-
-            ## #####################################################################
-            ## # Check if values need to be updated for the user
-            ## #####################################################################
-            foreach($ADUser in Get-ADUser -Filter {(EmployeeId -eq $EmpID) -and ((EmployeeType -eq $ActiveEmployeeType) -or (EmployeeType -eq $DeprovisionedEmployeeType))} -Properties displayName,Department,Company,Office)
-            {
-                ## #####################################################################
-                ## # Grade (stored as Department)
-                ## #####################################################################
-                $GradeValue = "Grade $($SourceUser.Grade)"
-                if ($GradeValue -ne $ADUser.Department) {
-                    Write-Log "Updating grade for $($ADUser.userprincipalname) from $($ADUser.Department) to $GradeValue"
-                    set-aduser -Identity $ADUser -Department $GradeValue
-                }
-
-                ## #####################################################################
-                ## # Check if this user is in the correct groups for any
-                ## # additional facilities they may belong to.
-                ## # Also check to make sure that this facility is listed in their "Department".
-                ## #####################################################################
-
-                $userActualGroups = @()
-                foreach($adgroup in (get-adprincipalgroupmembership -Identity $ADUser)) 
-                {
-                    $userActualGroups += $adgroup.name
-                }
-                
-                if ($null -ne $AdditionalFacility)
-                {                
-                    if ($AdditionalFacility.FacilityDAN -ne $BaseFacility.FacilityDAN) 
-                    {
-                        # Store a list of facilities in the "Office" or "PhysicalDeliveryOfficeLocationName" field.
-                        if ($ADUser.Office -inotmatch $AdditionalFacility.Name) 
-                        {
-                            $NewOffice = "$($ADUser.Office), $($AdditionalFacility.Name)"
-                            Write-Log "Setting $($ADUser)'s Office to: $NewOffice"
-                            set-aduser -Identity $ADUser -Office $NewOffice
-                        }
-
-                        # Check to make sure this user is in the correct groups for the additional facility
-                        foreach($grp in $(Convert-GroupList -GroupString $($AdditionalFacility.Groups)))
-                        {
-                            if ($userActualGroups -inotcontains $grp)
-                            {
-                                Write-Log "Adding $($ADUser.userprincipalname) to group: $grp"
-                                Add-ADGroupMember -Identity $grp -Members $ADUser -Confirm:$false
-                            }
-                        }
-
-                    }
-                }
-
-                ## #####################################################################
-                ## # Ensure this user is in the necesary groups for the primary facility
-                ## #####################################################################
-                foreach($grp in $(Convert-GroupList -GroupString $($BaseFacility.Groups)))
-                {
-                    if ($userActualGroups -inotcontains $grp)
-                    {
-                        Write-Log "Adding $($ADUser.userprincipalname) to group: $grp"
-                        Add-ADGroupMember -Identity $grp -Members $ADUser -Confirm:$false
-                    }
-                }
-
-            }
-
         } # If facility isn't null
 
         $UserCounter++
         if ($UserCounter % 50 -eq 0) {
             Write-Log "$UserCounter/$TotalUsers"
         }
-
     }
-
 
     ## Send teams webhook notification
 
     ## Send email notification
 }
 catch {
-    Write-Log $_
+    Write-Log "ERROR: $_"
 }
-Write-Log "Finished move and update script."
+Write-Log "Finished move script."

@@ -214,7 +214,7 @@ try {
     ## Send email notification
 } 
 catch {
-    Write-Log $_
+    Write-Log "ERROR: $_"
 }
 
 Write-Log "Finished provisioning."
