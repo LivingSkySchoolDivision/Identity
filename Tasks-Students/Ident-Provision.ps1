@@ -241,10 +241,10 @@ try {
 
             # Find the user
             $EmpID = $NewUser.UserId
-            foreach($ADUser in Get-ADUser -Filter {(EmployeeId -eq $EmpID) -and ((EmployeeType -eq $DeprovisionedEmployeeType))} -Properties displayName,Department,Company,Office,Description,EmployeeType,title)
+            foreach($ADUser in Get-ADUser -Filter {(EmployeeId -eq $EmpID) -and ((EmployeeType -eq $DeprovisionedEmployeeType))} -Properties displayName,Department,Company,Office,Description,EmployeeType,title,CN)
             {
                 # Adjust user properties
-                set-aduser -Identity $ADUser -Replace @{'employeeType'="$ActiveEmployeeType";'title'="$ActiveEmployeeType"} -Clear description -Company $($ThisUserFacility.Name) -Office $($ThisUserFacility.Name) -Enabled $AccountEnable
+                set-aduser -Identity $ADUser -Replace @{'employeeType'="$ActiveEmployeeType";'title'="$ActiveEmployeeType"} -Clear description -Company $($ThisUserFacility.Name) -Office $($ThisUserFacility.Name) -Enabled $AccountEnable -Department "Grade $($NewUser.Grade)"
 
                 # Remove the user from all groups
                 foreach($Group in Get-ADPrincipalGroupMembership -Identity $ADUser)
@@ -267,7 +267,9 @@ try {
                 }
 
                 # Actually move the user
-                move-ADObject -identity $ADUser -TargetPath $ThisUserFacility.ADOU                
+                move-ADObject -identity $ADUser -TargetPath $ThisUserFacility.ADOU    
+                                
+                Write-Log "Reprovisioned user: CN=$($ADUser.CN),$($ThisUserFacility.ADOU)"
             }
         }
     } 

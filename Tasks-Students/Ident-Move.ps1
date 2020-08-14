@@ -187,7 +187,7 @@ try {
                     }
 
                     # Set new Company value
-                    set-ADUser -Identity $ADUser -Company $($BaseFacility.Name) -Office $($BaseFacility.Name) -Enabled $AccountEnable
+                    set-ADUser -Identity $ADUser -Department "Grade $($SourceUser.Grade)" -Company $($BaseFacility.Name) -Office $($BaseFacility.Name) -Enabled $AccountEnable
 
                     # Actually move the object
                     move-ADObject -identity $ADUser -TargetPath $BaseFacility.ADOU
