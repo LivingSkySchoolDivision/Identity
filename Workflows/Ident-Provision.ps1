@@ -217,4 +217,4 @@ catch {
     Write-Log $_
 }
 
-Write-Log "Finished deprovisioning."
+Write-Log "Finished provisioning."
