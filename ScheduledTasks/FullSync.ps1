@@ -51,7 +51,7 @@ if ((Test-Path $LogFilePath) -eq $false) {
 }
 
 Write-Host "Logging to $LogFile"
-Write-Log "Starting full sync script..." >> $LogFile
+Write-Log "Starting $JobNameNoSpaces script..." >> $LogFile
 ## #########################################################
 ## # Checks to make sure necesary files exist
 ## #########################################################
