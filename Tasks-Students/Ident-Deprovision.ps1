@@ -39,7 +39,7 @@ function Deprovision-User
 
     try {
         $DepTime = Get-Date  
-        set-aduser $Identity -Description "Deprovisioned: $DepTime" -Enabled $true -Department "$DeprovisionedEmployeeType" -Office "$DeprovisionedEmployeeType" -Replace @{'employeeType'="$DeprovisionedEmployeeType";'title'="$DeprovisionedEmployeeType"}
+        set-aduser $Identity -Description "Deprovisioned: $DepTime" -Enabled $true -Office "$DeprovisionedEmployeeType" -Replace @{'employeeType'="$DeprovisionedEmployeeType";'title'="$DeprovisionedEmployeeType"}
 
         # Remove all group memberships
         foreach($Group in Get-ADPrincipalGroupMembership -Identity $Identity)
