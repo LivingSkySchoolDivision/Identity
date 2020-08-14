@@ -40,9 +40,9 @@ try {
         Throw "Config file not found. Specify using -ConfigFilePath. Defaults to config.xml in the directory above where this script is run from."
     }
     $configXML = [xml](Get-Content $AdjustedConfigFilePath)
-    $EmailDomain = $configXml.Settings.General.EmailDomain
-    $ActiveEmployeeType = $configXml.Settings.General.ActiveEmployeeType
-    $DeprovisionedEmployeeType = $configXml.Settings.General.DeprovisionedEmployeeType
+    $EmailDomain = $configXml.Settings.Students.EmailDomain
+    $ActiveEmployeeType = $configXml.Settings.Students.ActiveEmployeeType
+    $DeprovisionedEmployeeType = $configXml.Settings.Students.DeprovisionedEmployeeType
     $NotificationWebHookURL = $configXML.Settings.Notifications.WebHookURL
 
     ## Load the list of schools from the ../db folder
