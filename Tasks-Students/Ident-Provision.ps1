@@ -138,7 +138,8 @@ try {
 
     $IgnoredUsers = @()
     Write-Log "Processing new users..."
-    foreach($NewUser in $UsersToProvision) {
+    foreach($NewUser in $UsersToProvision) 
+    {
 
         # Find the facility for this user
         $ThisUserFacility = $null
@@ -207,6 +208,69 @@ try {
         }
     }
 
+
+    ## ############################################################
+    ## Reprovision previously deprovisioned users
+    ## ############################################################
+    Write-Log "Processing users to reprovision..."
+    foreach($NewUser in $UsersToReProvision) 
+    {
+        $ThisUserFacility = $null
+
+        foreach($Facility in $Facilities)
+        {
+            if ($Facility.FacilityId -eq $NewUser.BaseFacilityId)
+            {
+                $ThisUserFacility = $Facility
+            }
+        }
+
+        if ($null -ne $ThisUserFacility)
+        {
+            # Based on the new facility, should the account be enabled or not?
+            $AccountEnable = $false
+            if (
+                ($ThisUserFacility.DefaultAccountEnabled.ToLower() -eq "true") -or 
+                ($ThisUserFacility.DefaultAccountEnabled.ToLower() -eq "yes")  -or 
+                ($ThisUserFacility.DefaultAccountEnabled.ToLower() -eq "y")  -or 
+                ($ThisUserFacility.DefaultAccountEnabled.ToLower() -eq "t") 
+            )
+            {
+                $AccountEnable = $true
+            }
+
+            # Find the user
+            $EmpID = $NewUser.UserId
+            foreach($ADUser in Get-ADUser -Filter {(EmployeeId -eq $EmpID) -and ((EmployeeType -eq $DeprovisionedEmployeeType))} -Properties displayName,Department,Company,Office,Description,EmployeeType,title)
+            {
+                # Adjust user properties
+                set-aduser -Identity $ADUser -Replace @{'employeeType'="$ActiveEmployeeType";'title'="$ActiveEmployeeType"} -Clear description -Company $($ThisUserFacility.Name) -Office $($ThisUserFacility.Name) -Enabled $AccountEnable
+
+                # Remove the user from all groups
+                foreach($Group in Get-ADPrincipalGroupMembership -Identity $ADUser)
+                {
+                    # Don't remove from "domain users", because it won't let you do this anyway (its the user's "default group").
+                    if ($Group.Name -ne "Domain Users")
+                    {
+                        try 
+                        {
+                            Remove-ADGroupMember -Identity $Group -Members $ADUser -Confirm:$false
+                        }
+                        catch {}
+                    }
+                }
+                
+                # Add the user to groups for this facility
+                foreach($grp in (Convert-GroupList -GroupString $($ThisUserFacility.Groups)))
+                {
+                    Add-ADGroupMember -Identity $grp -Members $ADUser -Confirm:$false
+                }
+
+                # Actually move the user
+                move-ADObject -identity $ADUser -TargetPath $ThisUserFacility.ADOU                
+            }
+        }
+    } 
 
 
     ## Send teams webhook notification
