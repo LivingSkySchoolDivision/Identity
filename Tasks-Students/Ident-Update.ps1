@@ -5,10 +5,10 @@ param (
  )
 <#
     .SYNOPSIS
-        Moves users and makes sure users are assigned to appropriate groups based on their schools.
+        Updates users and makes sure users are assigned to appropriate groups based on their schools.
 
     .DESCRIPTION
-        Moves users and makes sure users are assigned to appropriate groups based on their schools.
+        Updates users and makes sure users are assigned to appropriate groups based on their schools.
 
     .PARAMETER SISExportFile
         A CSV export from the source SIS system.
@@ -27,7 +27,7 @@ param (
 . ./../Include/ADFunctions.ps1
 . ./../Include/CSVFunctions.ps1
 
-Write-Log "Start move and update script..."
+Write-Log "Start update script..."
 try {
     ## Load config file
     $AdjustedConfigFilePath = $ConfigFilePath
@@ -40,9 +40,9 @@ try {
         Throw "Config file not found. Specify using -ConfigFilePath. Defaults to config.xml in the directory above where this script is run from."
     }
     $configXML = [xml](Get-Content $AdjustedConfigFilePath)
-    $EmailDomain = $configXml.Settings.General.EmailDomain
-    $ActiveEmployeeType = $configXml.Settings.General.ActiveEmployeeType
-    $DeprovisionedEmployeeType = $configXml.Settings.General.DeprovisionedEmployeeType
+    $EmailDomain = $configXml.Settings.Students.EmailDomain
+    $ActiveEmployeeType = $configXml.Settings.Students.ActiveEmployeeType
+    $DeprovisionedEmployeeType = $configXml.Settings.Students.DeprovisionedEmployeeType
     $NotificationWebHookURL = $configXML.Settings.Notifications.WebHookURL
 
     ## Load the list of schools from the ../db folder
@@ -127,84 +127,6 @@ try {
             ## # This will not be very efficient.
             ## #####################################################################
             
-            ## #####################################################################
-            ## # Check if the user needs to be moved        
-            ## #####################################################################
-            foreach($ADUser in Get-ADUser -Filter {(EmployeeId -eq $EmpID) -and ((EmployeeType -eq $ActiveEmployeeType) -or (EmployeeType -eq $DeprovisionedEmployeeType))} -Properties displayName,Department,Company,Office,Description,EmployeeType,title)
-            {
-                ## #####################################################################
-                ## # Ensure the user is in the correct OU for their base facility.
-                ## #
-                ## # If a move is required, remove from old facility groups, and
-                ## # add to new facility groups.
-                ## #
-                ## # We basically can't do anything after this, because the object
-                ## # reference for $ADUser will no longer be valid once the object 
-                ## # is moved.
-                ## #####################################################################
-                $ParentContainer = $ADUser.DistinguishedName -replace '^.+?,(CN|OU.+)','$1'
-
-                # Check if this user is in the expected container
-                if ($ParentContainer.ToLower() -ne $BaseFacility.ADOU.ToLower()) {
-                    Write-Log "Moving $ADUser from $ParentContainer to $($BaseFacility.ADOU)"
-
-                    # Remove the user from any previous groups
-                    # Get the security groups from the "previous" school, based on what OU he's in
-                    $PreviousFacility = $null
-                    foreach($Facility in $Facilities)
-                    {
-                        if ($null -ne $Facility.ADOU) {
-                            if ($Facility.ADOU.ToLower() -eq $ParentContainer.ToLower())
-                            {
-                                $PreviousFacility = $Facility
-                            }
-                        }
-                    }
-                    if ($null -ne $PreviousFacility) {
-                        foreach($grp in (Convert-GroupList -GroupString $($PreviousFacility.Groups)))
-                        {
-                            Write-Log "Removing $($ADUser.userprincipalname) from group: $grp"
-                            remove-ADGroupMember -Identity $grp -Members $ADUser -Confirm:$false
-                        }
-                    }
-
-                    # Should the user account be enabled by default at the new site?
-                    $AccountEnable = $false
-                    if (
-                        ($BaseFacility.DefaultAccountEnabled.ToLower() -eq "true") -or 
-                        ($BaseFacility.DefaultAccountEnabled.ToLower() -eq "yes")  -or 
-                        ($BaseFacility.DefaultAccountEnabled.ToLower() -eq "y")  -or 
-                        ($BaseFacility.DefaultAccountEnabled.ToLower() -eq "t") 
-                    )
-                    {
-                        $AccountEnable = $true
-                    }
-
-                    # If this user is being reprovisioned, reset some values
-                    if ($ADUser.EmployeeType -eq $DeprovisionedEmployeeType) 
-                    {
-                        set-aduser $ADUser -Replace @{'employeeType'="$ActiveEmployeeType";'title'="$ActiveEmployeeType"} -Clear description                   
-                    }
-
-                    # Set new Company value
-                    set-ADUser -Identity $ADUser -Company $($BaseFacility.Name) -Office $($BaseFacility.Name) -Enabled $AccountEnable
-
-                    # Actually move the object
-                    move-ADObject -identity $ADUser -TargetPath $BaseFacility.ADOU
-
-                    # Add user to new groups based on new facility
-                    foreach($grp in (Convert-GroupList -GroupString $($BaseFacility.Groups)))
-                    {
-                        Write-Log "Adding $($ADUser.userprincipalname) to group: $grp"
-                        Add-ADGroupMember -Identity $grp -Members $ADUser -Confirm:$false
-                    }
-                }  
-
-                if ($null -eq $ADUser) {
-                    Write-Log "ADUser object is now null. Skipping until next run."
-                    continue
-                }
-            }
 
             ## #####################################################################
             ## # Check if the user needs to be renamed        
@@ -334,6 +256,6 @@ try {
     ## Send email notification
 }
 catch {
-    Write-Log $_
+    Write-Log "ERROR: $_"
 }
-Write-Log "Finished move and update script."
+Write-Log "Finished update script."

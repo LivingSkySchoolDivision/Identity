@@ -74,9 +74,9 @@ try {
         Throw "Config file not found. Specify using -ConfigFilePath. Defaults to config.xml in the directory above where this script is run from."
     }
     $configXML = [xml](Get-Content $AdjustedConfigFilePath)
-    $ActiveEmployeeType = $configXml.Settings.General.ActiveEmployeeType
-    $DeprovisionedEmployeeType = $configXml.Settings.General.DeprovisionedEmployeeType
-    $DeprovisionedADOU = $configXml.Settings.General.DeprovisionedADOU
+    $ActiveEmployeeType = $configXml.Settings.Students.ActiveEmployeeType
+    $DeprovisionedEmployeeType = $configXml.Settings.Students.DeprovisionedEmployeeType
+    $DeprovisionedADOU = $configXml.Settings.Students.DeprovisionedADOU
     $NotificationWebHookURL = $configXML.Settings.Notifications.WebHookURL
 
     ## Load the list of schools from the ../db folder
@@ -173,6 +173,6 @@ try {
     ## Send email notification
 }
 catch {
-    Write-Log $_
+    Write-Log "ERROR: $_"
 }
 Write-Log "Finished deprovisioning."

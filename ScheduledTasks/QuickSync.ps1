@@ -17,7 +17,7 @@ $ConfigFilePath = "../config.xml"
 $InFilePath = "../In/students.csv"
 $FacilityFilePath = "../db/facilities.csv"
 $LogFilePath = "../Logs/"
-$JobNameNoSpaces = "FullSync"
+$JobNameNoSpaces = "QuickSync"
 
 # Include this library file, because we want to use Write-Log
 . ./../Include/UtilityFunctions.ps1
@@ -142,18 +142,6 @@ catch {
     Write-Log $_
 }
 
-## #########################################################
-## # Update account groups and properties
-## #########################################################
-
-Write-Log "Calling Update script..." >> $LogFile
-try {
-    powershell -NoProfile -File ../Tasks-Students/Ident-Update.ps1 -ConfigFile $ConfigFilePath -SISExportFile $InFilePath -FacilityFile $FacilityFilePath >> $LogFile
-} 
-catch {
-    Write-Log "Exception running update script."
-    Write-Log $_
-}
 
 ## #########################################################
 ## # Clean up
