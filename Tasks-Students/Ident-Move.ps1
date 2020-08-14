@@ -27,7 +27,7 @@ param (
 . ./../Include/ADFunctions.ps1
 . ./../Include/CSVFunctions.ps1
 
-Write-Log "Start move script..."
+Write-Log "Start move script (This script may take 20+ minutes to complete)..."
 try {
     ## Load config file
     $AdjustedConfigFilePath = $ConfigFilePath
@@ -40,9 +40,9 @@ try {
         Throw "Config file not found. Specify using -ConfigFilePath. Defaults to config.xml in the directory above where this script is run from."
     }
     $configXML = [xml](Get-Content $AdjustedConfigFilePath)
-    $EmailDomain = $configXml.Settings.Students.EmailDomain
     $ActiveEmployeeType = $configXml.Settings.Students.ActiveEmployeeType
     $DeprovisionedEmployeeType = $configXml.Settings.Students.DeprovisionedEmployeeType
+    $DeprovisionedADOU = $configXml.Settings.Students.DeprovisionedADOU
     $NotificationWebHookURL = $configXML.Settings.Notifications.WebHookURL
 
     ## Load the list of schools from the ../db folder
@@ -187,7 +187,7 @@ try {
                     }
 
                     # Set new Company value
-                    set-ADUser -Identity $ADUser -Company $($BaseFacility.Name) -Office $($BaseFacility.Name) -Enabled $AccountEnable
+                    set-ADUser -Identity $ADUser -Department "Grade $($SourceUser.Grade)" -Company $($BaseFacility.Name) -Office $($BaseFacility.Name) -Enabled $AccountEnable
 
                     # Actually move the object
                     move-ADObject -identity $ADUser -TargetPath $BaseFacility.ADOU
@@ -213,6 +213,21 @@ try {
             Write-Log "$UserCounter/$TotalUsers"
         }
     }
+
+    ## #####################################################################
+    ## # As a clean-up, make sure that all AD objects with the employeetype
+    ## # matching our deprovisioned employeetype are in the correct OU
+    ## #####################################################################
+    Write-Log "Housekeeping existing deprovisioned users..."
+    foreach($ADUser in Get-AdUser -Filter {(EmployeeType -eq $DeprovisionedEmployeeType)})
+    {
+        $ParentContainer = $ADUser.DistinguishedName -replace '^.+?,(CN|OU.+)','$1'
+        if ($ParentContainer -ne $DeprovisionedADOU) 
+        {
+            Write-Log "Deprivisioned user $($ADUser.userprincipalname) is not in correct OU. Moving."
+            Deprovision-User $ADUser -EmployeeType $DeprovisionedEmployeeType -DeprovisionOU $DeprovisionedADOU           
+        }
+    } 
 
     ## Send teams webhook notification
 

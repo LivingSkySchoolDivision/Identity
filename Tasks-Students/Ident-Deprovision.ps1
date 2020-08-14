@@ -39,7 +39,7 @@ function Deprovision-User
 
     try {
         $DepTime = Get-Date  
-        set-aduser $Identity -Description "Deprovisioned: $DepTime" -Enabled $true -Department "$DeprovisionedEmployeeType" -Office "$DeprovisionedEmployeeType" -Replace @{'employeeType'="$DeprovisionedEmployeeType";'title'="$DeprovisionedEmployeeType"}
+        set-aduser $Identity -Description "Deprovisioned: $DepTime" -Enabled $true -Office "$DeprovisionedEmployeeType" -Replace @{'employeeType'="$DeprovisionedEmployeeType";'title'="$DeprovisionedEmployeeType"}
 
         # Remove all group memberships
         foreach($Group in Get-ADPrincipalGroupMembership -Identity $Identity)
@@ -152,22 +152,7 @@ try {
             Deprovision-User $ADUser -EmployeeType $DeprovisionedEmployeeType -DeprovisionOU $DeprovisionedADOU              
         }
     }
-
-    ## #####################################################################
-    ## # As a clean-up, make sure that all AD objects with the employeetype
-    ## # matching our deprovisioned employeetype are in the correct OU
-    ## #####################################################################
-    Write-Log "Housekeeping existing deprovisioned users..."
-    foreach($ADUser in Get-AdUser -Filter {(EmployeeType -eq $DeprovisionedEmployeeType)})
-    {
-        $ParentContainer = $ADUser.DistinguishedName -replace '^.+?,(CN|OU.+)','$1'
-        if ($ParentContainer -ne $DeprovisionedADOU) 
-        {
-            Write-Log "Deprivisioned user $($ADUser.userprincipalname) is not in correct OU. Moving."
-            Deprovision-User $ADUser -EmployeeType $DeprovisionedEmployeeType -DeprovisionOU $DeprovisionedADOU           
-        }
-    }    
-
+ 
     ## Send teams webhook notification
 
     ## Send email notification

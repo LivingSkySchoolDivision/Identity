@@ -27,7 +27,7 @@ param (
 . ./../Include/ADFunctions.ps1
 . ./../Include/CSVFunctions.ps1
 
-Write-Log "Start update script..."
+Write-Log "Start update script (This script may take 20+ minutes to complete)..."
 try {
     ## Load config file
     $AdjustedConfigFilePath = $ConfigFilePath
