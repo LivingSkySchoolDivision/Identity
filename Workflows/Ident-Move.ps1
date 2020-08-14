@@ -79,6 +79,9 @@ try {
     ## Ensure that they are in the correct groups, based on any additional schools
     ## Ensure their "Office" includes the names of all of their schools
 
+    $TotalUsers = $($SourceUsers.Count)
+    $UserCounter = 0
+
     Write-Log "Processing users..."
     foreach($SourceUser in $SourceUsers)
     {
@@ -317,6 +320,11 @@ try {
             }
 
         } # If facility isn't null
+
+        $UserCounter++
+        if ($UserCounter % 50 -eq 0) {
+            Write-Log "$UserCounter/$TotalUsers"
+        }
 
     }
 
