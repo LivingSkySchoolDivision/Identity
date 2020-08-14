@@ -19,6 +19,9 @@ $FacilityFilePath = "../db/facilities.csv"
 $LogFilePath = "../Logs/"
 $JobNameNoSpaces = "FullSync"
 
+# Include this library file, because we want to use Write-Log
+. ./../Include/UtilityFunctions.ps1
+
 ## #########################################################
 ## # Set script location so the relative paths all work
 ## #########################################################
