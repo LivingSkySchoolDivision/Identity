@@ -1,11 +1,13 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <Settings>
-  <General>
+  <Students>
     <ActiveEmployeeType>Student</ActiveEmployeeType>
     <DeprovisionedEmployeeType>FormerStudent</DeprovisionedEmployeeType>
     <DeprovisionedADOU>OU=FormerStudents,OU=School_Users,DC=lskysd,DC=ca</DeprovisionedADOU>
     <EmailDomain>lskysd.ca</EmailDomain>
-  </General>
+    <DaysDeprovisionedUntilDisable>30</DaysDeprovisionedUntilDisable>
+    <DaysDisabledBeforePurge>15</DaysDisabledBeforePurge>
+  </Students>
   <Notifications>
     <WebHookURL></WebHookURL>
   </Notifications>

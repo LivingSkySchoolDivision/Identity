@@ -154,6 +154,6 @@ if ((Test-Path $InFilePath) -eq $true) {
     Write-Log "Deleting $InFilePath"
     remove-item $InFilePath
 }
-Write-Log "Finished full sync script." >> $LogFile
+Write-Log "Finished $JobNameNoSpaces script." >> $LogFile
 set-location $OldLocation
 exit
