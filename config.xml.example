@@ -5,6 +5,8 @@
     <DeprovisionedEmployeeType>FormerStudent</DeprovisionedEmployeeType>
     <DeprovisionedADOU>OU=FormerStudents,OU=School_Users,DC=lskysd,DC=ca</DeprovisionedADOU>
     <EmailDomain>lskysd.ca</EmailDomain>
+    <DaysDeprovisionedUntilDisable>30</DaysDeprovisionedUntilDisable>
+    <DaysDisabledBeforePurge>15</DaysDisabledBeforePurge>
   </Students>
   <Notifications>
     <WebHookURL></WebHookURL>
