@@ -38,8 +38,8 @@ try {
     $configXML = [xml](Get-Content $AdjustedConfigFilePath)
     $DeprovisionedEmployeeType = $configXml.Settings.Students.DeprovisionedEmployeeType
     $NotificationWebHookURL = $configXML.Settings.Notifications.WebHookURL
-    $DisableCutoffDays = $configXml.Settings.Students.DaysDeprovisionedUntilDisable
-    $PurgeCutoffDays = $configXml.Settings.Students.DaysDisabledBeforePurge
+    $DisableCutoffDays = [int]$configXml.Settings.Students.DaysDeprovisionedUntilDisable
+    $PurgeCutoffDays = [int]$configXml.Settings.Students.DaysDisabledBeforePurge
 
     Write-Log "Finding stale deprovisioned accounts..."
     foreach($User in Get-ADUser -filter {Enabled -eq $True -and employeeType -eq $DeprovisionedEmployeeType } -Property LastLogonTimestamp | Select-Object -Property Name,DistinguishedName,@{ n = "LastLogonDate"; e = { [datetime]::FromFileTime( $_.lastLogonTimestamp ) } })
@@ -64,7 +64,8 @@ try {
     }
 
     Write-Log "Stale disabled former student accounts:"
-    $PurgeCutoffDay = (get-date).adddays($PurgeCutoffDays * -1)
+    $PurgeCutoffDay = (get-date).adddays([int]$PurgeCutoffDays * -1)
+    Write-Log "Purge Cutoff day: $PurgeCutoffDay"
     foreach($User in Get-ADUser -filter {Enabled -eq $false -AND employeeType -eq $DeprovisionedEmployeeType -AND whenChanged -lt $PurgeCutoffDay} -Properties whenChanged)
     {
         Write-Log "PURGE: $($User.DistinguishedName)"
