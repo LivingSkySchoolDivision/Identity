@@ -178,7 +178,13 @@ try {
 
                         # Update it's new values
                         Write-Log " > Updating properties..."
-                        set-ADUser -Identity $ADUser -Department "Grade $($SourceUser.Grade)" -Company $($BaseFacility.Name) -Office $($BaseFacility.Name) -Enabled $AccountEnable
+                        $OfficeValue = $($BaseFacility.Name)
+                        if ($null -ne $AdditionalFacility) 
+                        {
+                            $OfficeValue += ", $($AdditionalFacility.Name)"
+                        }
+
+                        set-ADUser -Identity $ADUser -Department "Grade $($SourceUser.Grade)" -Company $($BaseFacility.Name) -Office $OfficeValue -Enabled $AccountEnable
 
                         # Add user to new groups based on new facility
                         Write-Log " > Adding new groups..."
