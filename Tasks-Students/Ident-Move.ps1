@@ -27,7 +27,7 @@ param (
 . ./../Include/ADFunctions.ps1
 . ./../Include/CSVFunctions.ps1
 
-Write-Log "Start move script (This script may take 20+ minutes to complete)..."
+Write-Log "Start move script..."
 try {
     ## Load config file
     $AdjustedConfigFilePath = $ConfigFilePath
@@ -76,18 +76,30 @@ try {
     # For each active student (in the import file)
     ## If an account exists, continue. If an account does not, skip this user
     ## Ensure that they are in the correct OU, based on their base school
-    ## Ensure that they are in the correct groups, based on any additional schools
-    ## Ensure their "Office" includes the names of all of their schools
+
+    # Make a list of all AD users (active students) and their OUs
+    # Compare those OUs to what we expect them to be
+
+    Write-Log "Caching AD users..."
+    $AllStudents = Get-ADUser -Filter {(EmployeeType -eq $ActiveEmployeeType)} -ResultSetSize 2147483647 -Properties employeeId, DistinguishedName
+    $ADUsersWithParentOUs = @{}
+    foreach($ADUser in $AllStudents) 
+    {
+        if ($ADUser.employeeId.length -gt 0) 
+        {
+            if($ADUsersWithParentOUs.ContainsKey($ADUser.employeeId) -eq $false) 
+            {
+                $ParentContainer = $ADUser.DistinguishedName -replace '^.+?,(CN|OU.+)','$1'
+                $ADUsersWithParentOUs.Add("$($ADUser.employeeId)", $ParentContainer)
+            }
+        }
+    }
 
     $TotalUsers = $($SourceUsers.Count)
-    $UserCounter = 0
 
     Write-Log "Processing users..."
     foreach($SourceUser in $SourceUsers)
     {
-        # Find an account for this user in AD
-        $EmpID = $SourceUser.UserId
-
         ## #####################################################################
         ## # Get facility information for the facilities that this user
         ## # is supposed to be in.
@@ -120,98 +132,79 @@ try {
         ## #####################################################################
 
         if ($null -ne $BaseFacility)
-        {
-            ## #####################################################################
-            ## # We need to do things in a few seperate loops, because several
-            ## # lines below could break the reference returned by Get-ADUser
-            ## # This will not be very efficient.
-            ## #####################################################################
-            
+        {                     
+            # Should the user account be enabled by default at the new site?
+            $AccountEnable = $false
+            if (
+                ($BaseFacility.DefaultAccountEnabled.ToLower() -eq "true") -or 
+                ($BaseFacility.DefaultAccountEnabled.ToLower() -eq "yes")  -or 
+                ($BaseFacility.DefaultAccountEnabled.ToLower() -eq "y")  -or 
+                ($BaseFacility.DefaultAccountEnabled.ToLower() -eq "t") 
+            )
+            {
+                $AccountEnable = $true
+            }
+
             ## #####################################################################
             ## # Check if the user needs to be moved        
             ## #####################################################################
-            foreach($ADUser in Get-ADUser -Filter {(EmployeeId -eq $EmpID) -and ((EmployeeType -eq $ActiveEmployeeType) -or (EmployeeType -eq $DeprovisionedEmployeeType))} -Properties displayName,Department,Company,Office,Description,EmployeeType,title)
+            
+            if ($ADUsersWithParentOUs.ContainsKey($SourceUser.UserId))
             {
-                ## #####################################################################
-                ## # Ensure the user is in the correct OU for their base facility.
-                ## #
-                ## # If a move is required, remove from old facility groups, and
-                ## # add to new facility groups.
-                ## #
-                ## # We basically can't do anything after this, because the object
-                ## # reference for $ADUser will no longer be valid once the object 
-                ## # is moved.
-                ## #####################################################################
-                $ParentContainer = $ADUser.DistinguishedName -replace '^.+?,(CN|OU.+)','$1'
+                $CurrentOU = [string]($ADUsersWithParentOUs[$SourceUser.UserId])
+                $ExpectedOU = [string]$BaseFacility.ADOU
 
-                # Check if this user is in the expected container
-                if ($ParentContainer.ToLower() -ne $BaseFacility.ADOU.ToLower()) {
-                    Write-Log "Moving $ADUser from $ParentContainer to $($BaseFacility.ADOU)"
+                if ($CurrentOU.ToLower() -ne $ExpectedOU.ToLower())
+                {
+                    Write-Log "Moving $($SourceUser.FirstName) $($SourceUser.LastName) ($($SourceUser.UserId)) from $CurrentOU to $ExpectedOU..."
 
-                    # Remove the user from any previous groups
-                    # Get the security groups from the "previous" school, based on what OU he's in
-                    $PreviousFacility = $null
-                    foreach($Facility in $Facilities)
+                    # Find the ADUser object
+                    $EmpID = $SourceUser.UserId
+                    foreach($ADUser in Get-ADUser -Filter { (employeeId -eq $EmpID) -AND (employeeType -eq $ActiveEmployeeType)})
                     {
-                        if ($null -ne $Facility.ADOU) {
-                            if ($Facility.ADOU.ToLower() -eq $ParentContainer.ToLower())
-                            {
-                                $PreviousFacility = $Facility
-                            }
-                        }
-                    }
-                    if ($null -ne $PreviousFacility) {
-                        foreach($grp in (Convert-GroupList -GroupString $($PreviousFacility.Groups)))
+                        Write-Log " > Stripping existing groups..."
+                        # Strip all existing groups
+                        foreach($grp in (get-adprincipalgroupmembership -Identity $ADUser))
                         {
-                            Write-Log "Removing $($ADUser.userprincipalname) from group: $grp"
-                            remove-ADGroupMember -Identity $grp -Members $ADUser -Confirm:$false
+                            try 
+                            {
+                                if ($Group.Name -ne "Domain Users")
+                                {
+                                    Remove-ADGroupMember -Identity $Group -Members $ADUser -Confirm:$false
+                                }
+                            }
+                            catch {}
                         }
+
+                        # Update it's new values
+                        Write-Log " > Updating properties..."
+                        $OfficeValue = $($BaseFacility.Name)
+                        if ($null -ne $AdditionalFacility) 
+                        {
+                            $OfficeValue += ", $($AdditionalFacility.Name)"
+                        }
+
+                        set-ADUser -Identity $ADUser -Department "Grade $($SourceUser.Grade)" -Company $($BaseFacility.Name) -Office $OfficeValue -Enabled $AccountEnable
+
+                        # Add user to new groups based on new facility
+                        Write-Log " > Adding new groups..."
+                        foreach($grp in (Convert-GroupList -GroupString $($BaseFacility.Groups)))
+                        {
+                            try 
+                            {
+                                Add-ADGroupMember -Identity $grp -Members $ADUser -Confirm:$false                            
+                            }
+                            catch {}
+                        }
+                        
+                        # Actually move the object
+                        Write-Log " > Moving object..."
+                        move-ADObject -identity $ADUser -TargetPath $($BaseFacility.ADOU)
                     }
-
-                    # Should the user account be enabled by default at the new site?
-                    $AccountEnable = $false
-                    if (
-                        ($BaseFacility.DefaultAccountEnabled.ToLower() -eq "true") -or 
-                        ($BaseFacility.DefaultAccountEnabled.ToLower() -eq "yes")  -or 
-                        ($BaseFacility.DefaultAccountEnabled.ToLower() -eq "y")  -or 
-                        ($BaseFacility.DefaultAccountEnabled.ToLower() -eq "t") 
-                    )
-                    {
-                        $AccountEnable = $true
-                    }
-
-                    # If this user is being reprovisioned, reset some values
-                    if ($ADUser.EmployeeType -eq $DeprovisionedEmployeeType) 
-                    {
-                        set-aduser $ADUser -Replace @{'employeeType'="$ActiveEmployeeType";'title'="$ActiveEmployeeType"} -Clear description                   
-                    }
-
-                    # Set new Company value
-                    set-ADUser -Identity $ADUser -Department "Grade $($SourceUser.Grade)" -Company $($BaseFacility.Name) -Office $($BaseFacility.Name) -Enabled $AccountEnable
-
-                    # Actually move the object
-                    move-ADObject -identity $ADUser -TargetPath $BaseFacility.ADOU
-
-                    # Add user to new groups based on new facility
-                    foreach($grp in (Convert-GroupList -GroupString $($BaseFacility.Groups)))
-                    {
-                        Write-Log "Adding $($ADUser.userprincipalname) to group: $grp"
-                        Add-ADGroupMember -Identity $grp -Members $ADUser -Confirm:$false
-                    }
-                }  
-
-                if ($null -eq $ADUser) {
-                    Write-Log "ADUser object is now null. Skipping until next run."
-                    continue
                 }
-            }
+            }       
 
         } # If facility isn't null
-
-        $UserCounter++
-        if ($UserCounter % 50 -eq 0) {
-            Write-Log "$UserCounter/$TotalUsers"
-        }
     }
 
     ## #####################################################################
