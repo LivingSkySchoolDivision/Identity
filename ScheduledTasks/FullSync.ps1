@@ -155,6 +155,21 @@ catch {
     Write-Log $_
 }
 
+
+## #########################################################
+## # Reimport changes into SIS
+## #########################################################
+
+Write-Log "Calling SIS change import script..." >> $LogFile
+try {
+    powershell -NoProfile -File ../sis-SchoolLogic/import-studentdata-schoollogic.ps1 -ConfigFile $ConfigFilePath -SISExportFile $InFilePath >> $LogFile
+} 
+catch {
+    Write-Log "Exception running SIS change import script."
+    Write-Log $_
+}
+
+
 ## #########################################################
 ## # Clean up
 ## #########################################################
