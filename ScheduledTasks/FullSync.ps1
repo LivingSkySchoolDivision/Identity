@@ -84,7 +84,7 @@ if ((Test-Path $InFilePath) -eq $true) {
 
 Write-Log "Calling SIS export script..." >> $LogFile
 try {
-    powershell -NoProfile -File ../sis-export/export-students-schoollogic.ps1 -ConfigFile $ConfigFilePath -OutFile $InFilePath >> $LogFile
+    powershell -NoProfile -File ../sis-SchoolLogic/export-students-schoollogic.ps1 -ConfigFile $ConfigFilePath -OutFile $InFilePath >> $LogFile
 } 
 catch {
     Write-Log "Exception running move/update script."
@@ -154,6 +154,21 @@ catch {
     Write-Log "Exception running update script."
     Write-Log $_
 }
+
+
+## #########################################################
+## # Reimport changes into SIS
+## #########################################################
+
+Write-Log "Calling SIS change import script..." >> $LogFile
+try {
+    powershell -NoProfile -File ../sis-SchoolLogic/import-studentdata-schoollogic.ps1 -ConfigFile $ConfigFilePath -SISExportFile $InFilePath >> $LogFile
+} 
+catch {
+    Write-Log "Exception running SIS change import script."
+    Write-Log $_
+}
+
 
 ## #########################################################
 ## # Clean up
