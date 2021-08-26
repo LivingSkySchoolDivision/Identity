@@ -173,7 +173,7 @@ try {
                 $DisplayName = "$($NewUser.FirstName) $($NewUser.LastName)"
 
                 # Make a CanonicalName
-                $CN = "$($NewUser.FirstName.ToLower()) $($NewUser.LastName.ToLower()) $($NewUser.UserId)"
+                $CN = "$($NewUser.FirstName.ToLower()) $($NewUser.LastName.ToLower()) ($($NewUser.UserId))"
 
                 # Generate a username for this user
                 $NewUsername = New-Username -FirstName $NewUser.FirstName -LastName $NewUser.LastName -UserId $NewUser.UserId -ExistingUsernames $AllUsernames
