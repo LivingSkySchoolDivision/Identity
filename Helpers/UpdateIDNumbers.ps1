@@ -23,7 +23,7 @@ import-module ActiveDirectory
         
         if ($null -ne $User) {
          write-host $User
-         $NewCN = $User.givenName + " " + $User.sn + " (" + $NewID + ")"
+         $NewCN = $User.givenName.ToLower() + " " + $User.sn.ToLower() + " " + $NewID
          $User | Set-AdUser -POBox $LegacyID -EmployeeID $NewID        
          $User | Rename-ADObject -NewName $NewCN         
         }
