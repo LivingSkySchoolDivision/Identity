@@ -170,13 +170,13 @@ try {
                 $OU = $ThisUserFacility.ADOU
 
                 # Make a display name
-                $DisplayName = "$($NewUser.FirstName) $($NewUser.LastName)"
+                $DisplayName = "$($NewUser.PreferredFirstName) $($NewUser.PreferredLastName)"
 
                 # Make a CanonicalName
-                $CN = "$($NewUser.FirstName.ToLower()) $($NewUser.LastName.ToLower()) ($($NewUser.StudentID))"
+                $CN = "$($NewUser.PreferredFirstName.ToLower()) $($NewUser.PreferredLastName.ToLower()) ($($NewUser.StudentID))"
 
                 # Generate a username for this user
-                $NewUsername = New-Username -FirstName $NewUser.FirstName -LastName $NewUser.LastName -UserId $NewUser.StudentID -ExistingUsernames $AllUsernames
+                $NewUsername = New-Username -FirstName $NewUser.PreferredFirstName -LastName $NewUser.PreferredLastName -UserId $NewUser.StudentID -ExistingUsernames $AllUsernames
 
                 # Generate an email for this user
                 $NewEmail = "$($NewUsername)@$($EmailDomain)"
@@ -194,11 +194,11 @@ try {
                 }
 
                 # Initial password
-                $Password = "$($NewUser.FirstName.Substring(0,1).ToLower())$($NewUser.LastName.Substring(0,1).ToLower())-$($NewUser.StudentID)"
+                $Password = "$($NewUser.PreferredFirstName.Substring(0,1).ToLower())$($NewUser.PreferredLastName.Substring(0,1).ToLower())-$($NewUser.StudentID)"
                 $SecurePassword = ConvertTo-SecureString -String $Password -AsPlainText -Force
 
                 # Create the user
-                New-ADUser -SamAccountName $NewUsername -AccountPassword $SecurePassword -UserPrincipalName $NewEmail -Name $CN -Enabled $AccountEnable -DisplayName $DisplayName -GivenName $($NewUser.FirstName) -Surname $($NewUser.LastName) -ChangePasswordAtLogon $true -Department "Grade $($NewUser.Grade)" -EmailAddress $NewEmail -Company $($ThisUserFacility.Name) -Office $($ThisUserFacility.Name) -EmployeeID $($NewUser.StudentID) -OtherAttributes @{'employeeType'="$ActiveEmployeeType";'title'="$ActiveEmployeeType"} -Path $OU
+                New-ADUser -SamAccountName $NewUsername -AccountPassword $SecurePassword -UserPrincipalName $NewEmail -Name $CN -Enabled $AccountEnable -DisplayName $DisplayName -GivenName $($NewUser.PreferredFirstName) -Surname $($NewUser.PreferredLastName) -ChangePasswordAtLogon $true -Department "Grade $($NewUser.Grade)" -EmailAddress $NewEmail -Company $($ThisUserFacility.Name) -Office $($ThisUserFacility.Name) -EmployeeID $($NewUser.StudentID) -OtherAttributes @{'employeeType'="$ActiveEmployeeType";'title'="$ActiveEmployeeType"} -Path $OU
 
                 # Add the user to groups for this facility
                 foreach($grp in (Convert-GroupList -GroupString $($ThisUserFacility.Groups)))

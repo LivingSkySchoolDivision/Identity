@@ -140,7 +140,7 @@ try {
                 ## # and email address for the user.
                 ## #####################################################################
 
-                $DisplayName = "$($SourceUser.FirstName) $($SourceUser.LastName)"
+                $DisplayName = "$($SourceUser.PreferredFirstName) $($SourceUser.PreferredLastName)"
 
                 # If the display name is different than expected, make a new username and
                 # make a new email address
@@ -159,9 +159,9 @@ try {
                     }
                     $AllUsernames = $newAllUsernames
 
-                    $NewUsername = New-Username -FirstName $SourceUser.FirstName -LastName $SourceUser.LastName -UserId $SourceUser.StudentID -ExistingUsernames $AllUsernames
+                    $NewUsername = New-Username -FirstName $SourceUser.PreferredFirstName -LastName $SourceUser.PreferredLastName -UserId $SourceUser.StudentID -ExistingUsernames $AllUsernames
                     $NewEmail = "$($NewUsername)@$($EmailDomain)"
-                    $NewCN = "$($SourceUser.FirstName.ToLower()) $($SourceUser.LastName.ToLower()) $($SourceUser.StudentID)"
+                    $NewCN = "$($SourceUser.PreferredFirstName.ToLower()) $($SourceUser.PreferredLastName.ToLower()) $($SourceUser.StudentID)"
 
                     # Insert the new username into the list
                     $AllUsernames += $NewUsername
@@ -169,7 +169,7 @@ try {
                     # Apply the new samaccountname, displayname, firstname, lastname, userprincipalname, and mail
                     Write-Log "Renaming user $OldUsername to $NewUsername"
                     $ADUser = rename-adobject -Identity $ADUser -NewName $NewCN -PassThru
-                    set-aduser $ADUser -SamAccountName $NewUsername -UserPrincipalName $NewEmail -DisplayName $DisplayName -GivenName $($SourceUser.FirstName) -Surname $($SourceUser.LastName) -EmailAddress $NewEmail
+                    set-aduser $ADUser -SamAccountName $NewUsername -UserPrincipalName $NewEmail -DisplayName $DisplayName -GivenName $($SourceUser.PreferredFirstName) -Surname $($SourceUser.PreferredLastName) -EmailAddress $NewEmail
 
                     # TODO: Probably need to add/remove things from the "proxyAddress" field to handle default email aliases here
                     #       This field is not a simple string though, and may contain things we don't want to touch.
