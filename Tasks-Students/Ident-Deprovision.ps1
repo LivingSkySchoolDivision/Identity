@@ -112,9 +112,9 @@ try {
     $sourceUserIds = New-Object Collections.Generic.List[String]
     foreach($SourceUser in $SourceUsers)
     {
-        if ($sourceUserIds.Contains($SourceUser.UserId) -eq $false)
+        if ($sourceUserIds.Contains($SourceUser.StudentID) -eq $false)
         {
-            $sourceUserIds.Add($SourceUser.UserId)
+            $sourceUserIds.Add($SourceUser.StudentID)
         }
     }
 

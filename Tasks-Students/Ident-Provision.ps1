@@ -87,7 +87,7 @@ try {
         # Find users in Source (import file) that don't exist in AD
         foreach($SourceUser in $SourceUsers)
         {
-            if ($ExistingActiveEmployeeIds.Contains($SourceUser.UserId) -eq $false)
+            if ($ExistingActiveEmployeeIds.Contains($SourceUser.StudentID) -eq $false)
             {
                 $UsersToProvision += $SourceUser
             }
@@ -107,7 +107,7 @@ try {
     {
         foreach($SourceUser in $UsersToProvision)
         {
-            if ($ExistingDeprovisionedEmployeeIDs.Contains($SourceUser.UserId) -eq $true)
+            if ($ExistingDeprovisionedEmployeeIDs.Contains($SourceUser.StudentID) -eq $true)
             {
                 $UsersToReProvision += $SourceUser
             }
@@ -173,10 +173,10 @@ try {
                 $DisplayName = "$($NewUser.FirstName) $($NewUser.LastName)"
 
                 # Make a CanonicalName
-                $CN = "$($NewUser.FirstName.ToLower()) $($NewUser.LastName.ToLower()) ($($NewUser.UserId))"
+                $CN = "$($NewUser.FirstName.ToLower()) $($NewUser.LastName.ToLower()) ($($NewUser.StudentID))"
 
                 # Generate a username for this user
-                $NewUsername = New-Username -FirstName $NewUser.FirstName -LastName $NewUser.LastName -UserId $NewUser.UserId -ExistingUsernames $AllUsernames
+                $NewUsername = New-Username -FirstName $NewUser.FirstName -LastName $NewUser.LastName -UserId $NewUser.StudentID -ExistingUsernames $AllUsernames
 
                 # Generate an email for this user
                 $NewEmail = "$($NewUsername)@$($EmailDomain)"
@@ -194,11 +194,11 @@ try {
                 }
 
                 # Initial password
-                $Password = "$($NewUser.FirstName.Substring(0,1).ToLower())$($NewUser.LastName.Substring(0,1).ToLower())-$($NewUser.UserId)"
+                $Password = "$($NewUser.FirstName.Substring(0,1).ToLower())$($NewUser.LastName.Substring(0,1).ToLower())-$($NewUser.StudentID)"
                 $SecurePassword = ConvertTo-SecureString -String $Password -AsPlainText -Force
 
                 # Create the user
-                New-ADUser -SamAccountName $NewUsername -AccountPassword $SecurePassword -UserPrincipalName $NewEmail -Name $CN -Enabled $AccountEnable -DisplayName $DisplayName -GivenName $($NewUser.FirstName) -Surname $($NewUser.LastName) -ChangePasswordAtLogon $true -Department "Grade $($NewUser.Grade)" -EmailAddress $NewEmail -Company $($ThisUserFacility.Name) -Office $($ThisUserFacility.Name) -EmployeeID $($NewUser.UserId) -OtherAttributes @{'employeeType'="$ActiveEmployeeType";'title'="$ActiveEmployeeType"} -Path $OU
+                New-ADUser -SamAccountName $NewUsername -AccountPassword $SecurePassword -UserPrincipalName $NewEmail -Name $CN -Enabled $AccountEnable -DisplayName $DisplayName -GivenName $($NewUser.FirstName) -Surname $($NewUser.LastName) -ChangePasswordAtLogon $true -Department "Grade $($NewUser.Grade)" -EmailAddress $NewEmail -Company $($ThisUserFacility.Name) -Office $($ThisUserFacility.Name) -EmployeeID $($NewUser.StudentID) -OtherAttributes @{'employeeType'="$ActiveEmployeeType";'title'="$ActiveEmployeeType"} -Path $OU
 
                 # Add the user to groups for this facility
                 foreach($grp in (Convert-GroupList -GroupString $($ThisUserFacility.Groups)))
@@ -249,7 +249,7 @@ try {
             }
 
             # Find the user
-            $EmpID = $NewUser.UserId
+            $EmpID = $NewUser.StudentID
             foreach($ADUser in Get-ADUser -Filter {(EmployeeId -eq $EmpID) -and ((EmployeeType -eq $DeprovisionedEmployeeType))} -Properties displayName,Department,Company,Office,Description,EmployeeType,title,CN)
             {
                 # Adjust user properties

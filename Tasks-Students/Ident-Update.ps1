@@ -86,7 +86,7 @@ try {
     foreach($SourceUser in $SourceUsers)
     {
         # Find an account for this user in AD
-        $EmpID = $SourceUser.UserId
+        $EmpID = $SourceUser.StudentID
 
         ## #####################################################################
         ## # Get facility information for the facilities that this user
@@ -159,9 +159,9 @@ try {
                     }
                     $AllUsernames = $newAllUsernames
 
-                    $NewUsername = New-Username -FirstName $SourceUser.FirstName -LastName $SourceUser.LastName -UserId $SourceUser.UserId -ExistingUsernames $AllUsernames
+                    $NewUsername = New-Username -FirstName $SourceUser.FirstName -LastName $SourceUser.LastName -UserId $SourceUser.StudentID -ExistingUsernames $AllUsernames
                     $NewEmail = "$($NewUsername)@$($EmailDomain)"
-                    $NewCN = "$($SourceUser.FirstName.ToLower()) $($SourceUser.LastName.ToLower()) $($SourceUser.UserId)"
+                    $NewCN = "$($SourceUser.FirstName.ToLower()) $($SourceUser.LastName.ToLower()) $($SourceUser.StudentID)"
 
                     # Insert the new username into the list
                     $AllUsernames += $NewUsername

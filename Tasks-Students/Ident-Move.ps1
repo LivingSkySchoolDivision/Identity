@@ -149,17 +149,17 @@ try {
             ## # Check if the user needs to be moved        
             ## #####################################################################
             
-            if ($ADUsersWithParentOUs.ContainsKey($SourceUser.UserId))
+            if ($ADUsersWithParentOUs.ContainsKey($SourceUser.StudentID))
             {
-                $CurrentOU = [string]($ADUsersWithParentOUs[$SourceUser.UserId])
+                $CurrentOU = [string]($ADUsersWithParentOUs[$SourceUser.StudentID])
                 $ExpectedOU = [string]$BaseFacility.ADOU
 
                 if ($CurrentOU.ToLower() -ne $ExpectedOU.ToLower())
                 {
-                    Write-Log "Moving $($SourceUser.FirstName) $($SourceUser.LastName) ($($SourceUser.UserId)) from $CurrentOU to $ExpectedOU..."
+                    Write-Log "Moving $($SourceUser.FirstName) $($SourceUser.LastName) ($($SourceUser.StudentID)) from $CurrentOU to $ExpectedOU..."
 
                     # Find the ADUser object
-                    $EmpID = $SourceUser.UserId
+                    $EmpID = $SourceUser.StudentID
                     foreach($ADUser in Get-ADUser -Filter { (employeeId -eq $EmpID) -AND (employeeType -eq $ActiveEmployeeType)})
                     {
                         Write-Log " > Stripping existing groups..."
