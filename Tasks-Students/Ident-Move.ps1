@@ -162,7 +162,7 @@ try {
 
                 if ($CurrentOU.ToLower() -ne $ExpectedOU.ToLower())
                 {
-                    Write-Log "Moving $($SourceUser.PreferredFirstName) $($SourceUser.LastName) ($($SourceUser.StudentID)) from $CurrentOU to $ExpectedOU..."
+                    Write-Log "Moving $FirstName $LastName $StudentID from $CurrentOU to $ExpectedOU..."
 
                     # Find the ADUser object
                     $EmpID = $SourceUser.StudentID
