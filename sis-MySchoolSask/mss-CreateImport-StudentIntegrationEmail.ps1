@@ -1,8 +1,8 @@
 param (
-    [string]$ConfigFile
+    [string]$ConfigFile,
+    [Parameter(Mandatory=$true)][string]$OutputFileName
  )
 
- $OutputFileName = "test.csv"
  $Delimeter = ","
 
 ## ##################################################
@@ -46,7 +46,6 @@ try {
                 "Pupil ID" = $User.employeeID
                 "Integration Email" = $User.mail
             }
-
         }
     }
 
