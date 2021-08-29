@@ -164,7 +164,6 @@ try {
 
                     $NewUsername = New-Username -FirstName $FirstName -LastName $LastName -UserId $SourceUser.StudentID -ExistingUsernames $AllUsernames
                     $NewEmail = "$($NewUsername)@$($EmailDomain)"
-                    $NewCN = "$($FirstName.ToLower()) $($LastName.ToLower()) $($SourceUser.StudentID)"
 
                     # Insert the new username into the list
                     $AllUsernames += $NewUsername
@@ -180,7 +179,7 @@ try {
 
             
             ## #####################################################################
-            ## # Check if the user needs to be renamed        
+            ## # Check if the user's CN needs to be renamed        
             ## #####################################################################
             foreach($ADUser in Get-ADUser -Filter {(EmployeeId -eq $EmpID) -and ((EmployeeType -eq $ActiveEmployeeType) -or (EmployeeType -eq $DeprovisionedEmployeeType))} -Properties cn,displayName,Department,Company,Office)
             {
