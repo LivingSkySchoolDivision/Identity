@@ -195,7 +195,8 @@ try {
 
                 if ($ExpectedCN -ne $ADUser.cn)
                 {
-                    Write-Log "Updating CN for user '$($ADUser.cn)' to '$NewCN'"
+                    Write-Log "Updating CN for user '$($ADUser.cn)' to '$ExpectedCN'"
+                    write-host $ADUser
                     $ADUser | rename-adobject -NewName $ExpectedCN                     
                 }
             }
