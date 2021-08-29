@@ -135,7 +135,7 @@ try {
             ## #####################################################################
             ## # Check if the user needs to be renamed        
             ## #####################################################################
-            foreach($ADUser in Get-ADUser -Filter {(EmployeeId -eq $EmpID) -and ((EmployeeType -eq $ActiveEmployeeType) -or (EmployeeType -eq $DeprovisionedEmployeeType))} -Properties displayName,Department,Company,Office)
+            foreach($ADUser in Get-ADUser -Filter {(EmployeeId -eq $EmpID) -and ((EmployeeType -eq $ActiveEmployeeType) -or (EmployeeType -eq $DeprovisionedEmployeeType))} -Properties cn,displayName,Department,Company,Office)
             {
                 ## #####################################################################
                 ## # Check if this user's first or last name has changed.
@@ -144,11 +144,12 @@ try {
                 ## # and email address for the user.
                 ## #####################################################################
 
-                $DisplayName = "$($SourceUser.PreferredFirstName) $($SourceUser.PreferredLastName)"
+                $DisplayName = "$FirstName $LastName"
+                $ExpectedCN = "$($FirstName.ToLower()) $($LastName.ToLower()) $StudentID"
 
                 # If the display name is different than expected, make a new username and
                 # make a new email address
-                if ($DisplayName.ToLower() -ne $ADUser.displayName.ToLower())
+                if (($DisplayName.ToLower() -ne $ADUser.displayName.ToLower()) -or ($ExpectedCN -ne $ADUser.cn))
                 {
                     $OldUsername = $ADUser.samaccountname
 
@@ -157,8 +158,6 @@ try {
                     foreach($existingusername in $AllUsernames) {
                         if ($OldUsername -ne $existingusername) {
                             $newAllUsernames += $existingusername
-                        } else {
-                            Write-Log "Removed $OldUsername from known username list"
                         }
                     }
                     $AllUsernames = $newAllUsernames
@@ -179,6 +178,7 @@ try {
                     #       This field is not a simple string though, and may contain things we don't want to touch.
                 }
             }
+            
 
             ## #####################################################################
             ## # Check if values need to be updated for the user
