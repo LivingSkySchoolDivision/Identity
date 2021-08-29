@@ -132,8 +132,9 @@ try {
             ## #####################################################################
             
 
+
             ## #####################################################################
-            ## # Check if the user needs to be renamed        
+            ## # Check if the user's display name needs to be updated       
             ## #####################################################################
             foreach($ADUser in Get-ADUser -Filter {(EmployeeId -eq $EmpID) -and ((EmployeeType -eq $ActiveEmployeeType) -or (EmployeeType -eq $DeprovisionedEmployeeType))} -Properties cn,displayName,Department,Company,Office)
             {
@@ -145,11 +146,10 @@ try {
                 ## #####################################################################
 
                 $DisplayName = "$FirstName $LastName"
-                $ExpectedCN = "$($FirstName.ToLower()) $($LastName.ToLower()) $StudentID"
 
                 # If the display name is different than expected, make a new username and
                 # make a new email address
-                if (($DisplayName.ToLower() -ne $ADUser.displayName.ToLower()) -or ($ExpectedCN -ne $ADUser.cn))
+                if ($DisplayName.ToLower() -ne $ADUser.displayName.ToLower())
                 {
                     $OldUsername = $ADUser.samaccountname
 
@@ -170,12 +170,35 @@ try {
                     $AllUsernames += $NewUsername
 
                     # Apply the new samaccountname, displayname, firstname, lastname, userprincipalname, and mail
-                    Write-Log "Renaming user $OldUsername to $NewUsername"
-                    $ADUser = rename-adobject -Identity $ADUser -NewName $NewCN -PassThru
+                    Write-Log "Updating names, usernames, and email address user $OldUsername to $NewUsername"
                     set-aduser $ADUser -SamAccountName $NewUsername -UserPrincipalName $NewEmail -DisplayName $DisplayName -GivenName $FirstName -Surname $LastName -EmailAddress $NewEmail
 
                     # TODO: Probably need to add/remove things from the "proxyAddress" field to handle default email aliases here
                     #       This field is not a simple string though, and may contain things we don't want to touch.
+                }
+            }
+
+            
+            ## #####################################################################
+            ## # Check if the user needs to be renamed        
+            ## #####################################################################
+            foreach($ADUser in Get-ADUser -Filter {(EmployeeId -eq $EmpID) -and ((EmployeeType -eq $ActiveEmployeeType) -or (EmployeeType -eq $DeprovisionedEmployeeType))} -Properties cn,displayName,Department,Company,Office)
+            {
+                ## #####################################################################
+                ## # Check if this user's first or last name has changed.
+                ## #
+                ## # If so, we'll need to update the new name, and make a new username
+                ## # and email address for the user.
+                ## #####################################################################
+
+                $ExpectedCN = "$($FirstName.ToLower()) $($LastName.ToLower()) $StudentID"
+
+                if ($ExpectedCN -ne $ADUser.cn)
+                {
+                    $NewCN = "$($FirstName.ToLower()) $($LastName.ToLower()) $($StudentID)"
+
+                    Write-Log "Updating CN for user $ExpectedCN to $NewCN"
+                    $ADUser = rename-adobject -Identity $ADUser -NewName $NewCN -PassThru                    
                 }
             }
             
