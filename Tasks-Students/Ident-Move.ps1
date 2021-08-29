@@ -223,8 +223,8 @@ try {
         $ParentContainer = $ADUser.DistinguishedName -replace '^.+?,(CN|OU.+)','$1'
         if ($ParentContainer -ne $DeprovisionedADOU) 
         {
-            Write-Log "Deprivisioned user $($ADUser.userprincipalname) is not in correct OU. Moving."
-            Deprovision-User $ADUser -EmployeeType $DeprovisionedEmployeeType -DeprovisionOU $DeprovisionedADOU           
+            Write-Log "Deprovisioned user $($ADUser.userprincipalname) is not in correct OU. Moving."
+            move-ADObject -identity $ADUser -TargetPath $DeprovisionedADOU         
         }
     } 
 
