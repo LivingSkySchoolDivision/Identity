@@ -197,8 +197,8 @@ try {
                 {
                     $NewCN = "$($FirstName.ToLower()) $($LastName.ToLower()) $($StudentID)"
 
-                    Write-Log "Updating CN for user $ExpectedCN to $NewCN"
-                    $ADUser = rename-adobject -Identity $ADUser -NewName $NewCN -PassThru                    
+                    Write-Log "Updating CN for user '$ExpectedCN' to '$NewCN'"
+                    rename-adobject -Identity $ADUser -NewName $NewCN -PassThru                    
                 }
             }
             
