@@ -100,6 +100,21 @@ try {
     Write-Log "Processing users..."
     foreach($SourceUser in $SourceUsers)
     {
+        # Parse the user's name
+        $FirstName = $SourceUser.PreferredFirstName
+        $LastName = $SourceUser.PreferredLastName
+        $Grade = $SourceUser.GradeLevel
+        $StudentID = $SourceUser.StudentID
+
+        # Check for missing preferred names
+        if ($FirstName.Length -lt 1) {
+            $FirstName = $SourceUser.LegalFirstName
+        }
+        if ($LastName.Length -lt 1) {
+            $LastName = $SourceUser.LegalLastName
+        }
+
+
         ## #####################################################################
         ## # Get facility information for the facilities that this user
         ## # is supposed to be in.

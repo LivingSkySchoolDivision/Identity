@@ -85,8 +85,22 @@ try {
     Write-Log "Processing users..."
     foreach($SourceUser in $SourceUsers)
     {
+        # Parse the user's name
+        $FirstName = $SourceUser.PreferredFirstName
+        $LastName = $SourceUser.PreferredLastName
+        $Grade = $SourceUser.GradeLevel
+        $StudentID = $SourceUser.StudentID
+
+        # Check for missing preferred names
+        if ($FirstName.Length -lt 1) {
+            $FirstName = $SourceUser.LegalFirstName
+        }
+        if ($LastName.Length -lt 1) {
+            $LastName = $SourceUser.LegalLastName
+        }
+
         # Find an account for this user in AD
-        $EmpID = $SourceUser.StudentID
+        $EmpID = $StudentID
 
         ## #####################################################################
         ## # Get facility information for the facilities that this user
@@ -94,7 +108,6 @@ try {
         ## #####################################################################
 
         $BaseFacility = $null
-        $AdditionalFacility = $null
 
         # Find this user's base facility
         foreach($Facility in $Facilities)
@@ -150,9 +163,9 @@ try {
                     }
                     $AllUsernames = $newAllUsernames
 
-                    $NewUsername = New-Username -FirstName $SourceUser.PreferredFirstName -LastName $SourceUser.PreferredLastName -UserId $SourceUser.StudentID -ExistingUsernames $AllUsernames
+                    $NewUsername = New-Username -FirstName $FirstName -LastName $LastName -UserId $SourceUser.StudentID -ExistingUsernames $AllUsernames
                     $NewEmail = "$($NewUsername)@$($EmailDomain)"
-                    $NewCN = "$($SourceUser.PreferredFirstName.ToLower()) $($SourceUser.PreferredLastName.ToLower()) $($SourceUser.StudentID)"
+                    $NewCN = "$($FirstName.ToLower()) $($LastName.ToLower()) $($SourceUser.StudentID)"
 
                     # Insert the new username into the list
                     $AllUsernames += $NewUsername
@@ -160,7 +173,7 @@ try {
                     # Apply the new samaccountname, displayname, firstname, lastname, userprincipalname, and mail
                     Write-Log "Renaming user $OldUsername to $NewUsername"
                     $ADUser = rename-adobject -Identity $ADUser -NewName $NewCN -PassThru
-                    set-aduser $ADUser -SamAccountName $NewUsername -UserPrincipalName $NewEmail -DisplayName $DisplayName -GivenName $($SourceUser.PreferredFirstName) -Surname $($SourceUser.PreferredLastName) -EmailAddress $NewEmail
+                    set-aduser $ADUser -SamAccountName $NewUsername -UserPrincipalName $NewEmail -DisplayName $DisplayName -GivenName $FirstName -Surname $LastName -EmailAddress $NewEmail
 
                     # TODO: Probably need to add/remove things from the "proxyAddress" field to handle default email aliases here
                     #       This field is not a simple string though, and may contain things we don't want to touch.
@@ -175,7 +188,7 @@ try {
                 ## #####################################################################
                 ## # Grade (stored as Department)
                 ## #####################################################################
-                $GradeValue = "Grade $($SourceUser.GradeLevel)"
+                $GradeValue = "Grade $Grade"
                 if ($GradeValue -ne $ADUser.Department) {
                     Write-Log "Updating grade for $($ADUser.userprincipalname) from $($ADUser.Department) to $GradeValue"
                     set-aduser -Identity $ADUser -Department $GradeValue
@@ -191,31 +204,6 @@ try {
                 foreach($adgroup in (get-adprincipalgroupmembership -Identity $ADUser)) 
                 {
                     $userActualGroups += $adgroup.name
-                }
-                
-                if ($null -ne $AdditionalFacility)
-                {                
-                    if ($AdditionalFacility.FacilityDAN -ne $BaseFacility.FacilityDAN) 
-                    {
-                        # Store a list of facilities in the "Office" or "PhysicalDeliveryOfficeLocationName" field.
-                        if ($ADUser.Office -inotmatch $AdditionalFacility.Name) 
-                        {
-                            $NewOffice = "$($ADUser.Office), $($AdditionalFacility.Name)"
-                            Write-Log "Setting $($ADUser)'s Office to: $NewOffice"
-                            set-aduser -Identity $ADUser -Office $NewOffice
-                        }
-
-                        # Check to make sure this user is in the correct groups for the additional facility
-                        foreach($grp in $(Convert-GroupList -GroupString $($AdditionalFacility.Groups)))
-                        {
-                            if ($userActualGroups -inotcontains $grp)
-                            {
-                                Write-Log "Adding $($ADUser.userprincipalname) to group: $grp"
-                                Add-ADGroupMember -Identity $grp -Members $ADUser -Confirm:$false
-                            }
-                        }
-
-                    }
                 }
 
                 ## #####################################################################

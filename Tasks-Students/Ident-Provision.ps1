@@ -149,6 +149,20 @@ try {
     Write-Log "Processing new users..."
     foreach($NewUser in $UsersToProvision) 
     {
+        # Parse the user's name
+        $FirstName = $NewUser.PreferredFirstName
+        $LastName = $NewUser.PreferredLastName
+        $Grade = $NewUser.GradeLevel
+        $StudentID = $NewUser.StudentID
+
+        # Check for missing preferred names
+        if ($FirstName.Length -lt 1) {
+            $FirstName = $NewUser.LegalFirstName
+        }
+        if ($LastName.Length -lt 1) {
+            $LastName = $NewUser.LegalLastName
+        }
+
 
         # Find the facility for this user
         $ThisUserFacility = $null
@@ -170,13 +184,13 @@ try {
                 $OU = $ThisUserFacility.ADOU
 
                 # Make a display name
-                $DisplayName = "$($NewUser.PreferredFirstName) $($NewUser.PreferredLastName)"
+                $DisplayName = "$FirstName $LastName"
 
                 # Make a CanonicalName
-                $CN = "$($NewUser.PreferredFirstName.ToLower()) $($NewUser.PreferredLastName.ToLower()) $($NewUser.StudentID)"
+                $CN = "$($FirstName.ToLower()) $($LastName.ToLower()) $($StudentID)"
 
                 # Generate a username for this user
-                $NewUsername = New-Username -FirstName $NewUser.PreferredFirstName -LastName $NewUser.PreferredLastName -UserId $NewUser.StudentID -ExistingUsernames $AllUsernames
+                $NewUsername = New-Username -FirstName $FirstName -LastName $LastName -UserId $StudentID -ExistingUsernames $AllUsernames
 
                 # Generate an email for this user
                 $NewEmail = "$($NewUsername)@$($EmailDomain)"
@@ -194,11 +208,11 @@ try {
                 }
 
                 # Initial password
-                $Password = "$($NewUser.PreferredFirstName.Substring(0,1).ToLower())$($NewUser.PreferredLastName.Substring(0,1).ToLower())-$($NewUser.StudentID)"
+                $Password = "$($FirstName.Substring(0,1).ToLower())$($LastName.Substring(0,1).ToLower())-$($NewUser.StudentID)"
                 $SecurePassword = ConvertTo-SecureString -String $Password -AsPlainText -Force
 
                 # Create the user
-                New-ADUser -SamAccountName $NewUsername -AccountPassword $SecurePassword -UserPrincipalName $NewEmail -Name $CN -Enabled $AccountEnable -DisplayName $DisplayName -GivenName $($NewUser.PreferredFirstName) -Surname $($NewUser.PreferredLastName) -ChangePasswordAtLogon $true -Department "Grade $($NewUser.GradeLevel)" -EmailAddress $NewEmail -Company $($ThisUserFacility.Name) -Office $($ThisUserFacility.Name) -EmployeeID $($NewUser.StudentID) -OtherAttributes @{'employeeType'="$ActiveEmployeeType";'title'="$ActiveEmployeeType"} -Path $OU
+                New-ADUser -SamAccountName $NewUsername -AccountPassword $SecurePassword -UserPrincipalName $NewEmail -Name $CN -Enabled $AccountEnable -DisplayName $DisplayName -GivenName $($FirstName) -Surname $($LastName) -ChangePasswordAtLogon $true -Department "Grade $($Grade)" -EmailAddress $NewEmail -Company $($ThisUserFacility.Name) -Office $($ThisUserFacility.Name) -EmployeeID $($StudentID) -OtherAttributes @{'employeeType'="$ActiveEmployeeType";'title'="$ActiveEmployeeType"} -Path $OU
 
                 # Add the user to groups for this facility
                 foreach($grp in (Convert-GroupList -GroupString $($ThisUserFacility.Groups)))
@@ -249,11 +263,11 @@ try {
             }
 
             # Find the user
-            $EmpID = $NewUser.StudentID
+            $EmpID = $StudentID
             foreach($ADUser in Get-ADUser -Filter {(EmployeeId -eq $EmpID) -and ((EmployeeType -eq $DeprovisionedEmployeeType))} -Properties displayName,Department,Company,Office,Description,EmployeeType,title,CN)
             {
                 # Adjust user properties
-                set-aduser -Identity $ADUser -Replace @{'employeeType'="$ActiveEmployeeType";'title'="$ActiveEmployeeType"} -Clear description -Company $($ThisUserFacility.Name) -Office $($ThisUserFacility.Name) -Enabled $AccountEnable -Department "Grade $($NewUser.GradeLevel)"
+                set-aduser -Identity $ADUser -Replace @{'employeeType'="$ActiveEmployeeType";'title'="$ActiveEmployeeType"} -Clear description -Company $($ThisUserFacility.Name) -Office $($ThisUserFacility.Name) -Enabled $AccountEnable -Department "Grade $($Grade)"
 
                 # Remove the user from all groups
                 foreach($Group in Get-ADPrincipalGroupMembership -Identity $ADUser)
