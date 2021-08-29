@@ -90,6 +90,7 @@ try {
         $LastName = $SourceUser.PreferredLastName
         $Grade = $SourceUser.GradeLevel
         $StudentID = $SourceUser.PupilNo
+        $LearningID = $NewUser.SaskLearningID
 
         # Check for missing preferred names
         if ($FirstName.Length -lt 1) {
@@ -202,8 +203,16 @@ try {
             ## #####################################################################
             ## # Check if values need to be updated for the user
             ## #####################################################################
-            foreach($ADUser in Get-ADUser -Filter {(EmployeeId -eq $EmpID) -and ((EmployeeType -eq $ActiveEmployeeType) -or (EmployeeType -eq $DeprovisionedEmployeeType))} -Properties displayName,Department,Company,Office)
+            foreach($ADUser in Get-ADUser -Filter {(EmployeeId -eq $EmpID) -and ((EmployeeType -eq $ActiveEmployeeType) -or (EmployeeType -eq $DeprovisionedEmployeeType))} -Properties displayName,Department,Company,Office,EmployeeNumber)
             {
+                 ## #####################################################################
+                ## # Learning ID (Stored as EmployeeNumber)
+                ## #####################################################################
+                if ($LearningID -ne $ADUser.EmployeeNumber) {
+                    Write-Log "Updating learning ID (employee number) for $($ADUser.userprincipalname) from $($ADUser.EmployeeNumber) to $LearningID"
+                    set-aduser -Identity $ADUser EmployeeNumber $LearningID
+                }
+
                 ## #####################################################################
                 ## # Grade (stored as Department)
                 ## #####################################################################

@@ -154,6 +154,7 @@ try {
         $LastName = $NewUser.PreferredLastName
         $Grade = $NewUser.GradeLevel
         $StudentID = $NewUser.PupilNo
+        $LearningID = $NewUser.SaskLearningID
 
         # Check for missing preferred names
         if ($FirstName.Length -lt 1) {
@@ -212,7 +213,7 @@ try {
                 $SecurePassword = ConvertTo-SecureString -String $Password -AsPlainText -Force
 
                 # Create the user
-                New-ADUser -SamAccountName $NewUsername -AccountPassword $SecurePassword -UserPrincipalName $NewEmail -Name $CN -Enabled $AccountEnable -DisplayName $DisplayName -GivenName $($FirstName) -Surname $($LastName) -ChangePasswordAtLogon $true -Department "Grade $($Grade)" -EmailAddress $NewEmail -Company $($ThisUserFacility.Name) -Office $($ThisUserFacility.Name) -EmployeeID $($StudentID) -OtherAttributes @{'employeeType'="$ActiveEmployeeType";'title'="$ActiveEmployeeType"} -Path $OU
+                New-ADUser -SamAccountName $NewUsername -AccountPassword $SecurePassword -UserPrincipalName $NewEmail -Name $CN -Enabled $AccountEnable -DisplayName $DisplayName -GivenName $($FirstName) -Surname $($LastName) -ChangePasswordAtLogon $true -Department "Grade $($Grade)" -EmailAddress $NewEmail -Company $($ThisUserFacility.Name) -Office $($ThisUserFacility.Name) -EmployeeID $($StudentID) -EmployeeNumber $LearningID -OtherAttributes @{'employeeType'="$ActiveEmployeeType";'title'="$ActiveEmployeeType"} -Path $OU
 
                 # Add the user to groups for this facility
                 foreach($grp in (Convert-GroupList -GroupString $($ThisUserFacility.Groups)))
