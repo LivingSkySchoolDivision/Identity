@@ -4,7 +4,7 @@ function Get-SourceUsers {
         [Parameter(Mandatory=$true)][String] $CSVFile
     )
 
-    return import-csv $CSVFile -header('UserId','FirstName','LastName','MiddleName','BaseFacilityId','AdditionalFacilityId','Email','DateOfBirth','UserName','Grade','HomeRoom') | Select -skip 1
+    return import-csv $CSVFile -header("StudentID","LegalFirstName","LegalLastName","LegalMiddleName","PreferredFirstName","PreferredLastName","PreferredMiddleName","PrimaryEmail","AlternateEmail","BaseSchoolName","BaseSchoolDAN","EnrollmentStatus","GradeLevel","YOG","O365Authorisation","AcceptableUsePolicy","LegacyStudentID","GoogleDocsEmail") | Select -skip 1
 }
 
 function Get-Facilities {
