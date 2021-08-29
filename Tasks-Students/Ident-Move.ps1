@@ -111,18 +111,9 @@ try {
         # Find this user's base facility
         foreach($Facility in $Facilities)
         {
-            if ($Facility.FacilityId -eq $SourceUser.BaseSchoolDAN)
+            if ($Facility.FacilityDAN -eq $SourceUser.BaseSchoolDAN)
             {
                 $BaseFacility = $Facility
-            }
-        }
-
-        # Find this user's additional facility
-        foreach($Facility in $Facilities)
-        {
-            if ($Facility.FacilityId -eq $SourceUser.AdditionalFacilityId)
-            {
-                $AdditionalFacility = $Facility
             }
         }
 

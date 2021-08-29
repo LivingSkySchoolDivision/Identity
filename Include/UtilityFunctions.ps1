@@ -7,8 +7,8 @@ function Remove-UsersFromUnknownFacilities {
     ## Make a list<string> of facility ids to make checking easier
     $facilityIds = New-Object Collections.Generic.List[String]
     foreach($Facility in $FacilityList) {
-        if ($facilityIds.Contains($Facility.FacilityId) -eq $false) {
-            $facilityIds.Add($Facility.FacilityId)
+        if ($facilityIds.Contains($Facility.FacilityDAN) -eq $false) {
+            $facilityIds.Add($Facility.FacilityDAN)
         }
     }
 
