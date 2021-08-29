@@ -99,7 +99,7 @@ try {
         # Find this user's base facility
         foreach($Facility in $Facilities)
         {
-            if ($Facility.FacilityId -eq $SourceUser.BaseFacilityId)
+            if ($Facility.FacilityId -eq $SourceUser.BaseSchoolDAN)
             {
                 $BaseFacility = $Facility
             }
@@ -184,7 +184,7 @@ try {
                 ## #####################################################################
                 ## # Grade (stored as Department)
                 ## #####################################################################
-                $GradeValue = "Grade $($SourceUser.Grade)"
+                $GradeValue = "Grade $($SourceUser.GradeLevel)"
                 if ($GradeValue -ne $ADUser.Department) {
                     Write-Log "Updating grade for $($ADUser.userprincipalname) from $($ADUser.Department) to $GradeValue"
                     set-aduser -Identity $ADUser -Department $GradeValue

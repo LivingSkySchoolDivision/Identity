@@ -15,7 +15,7 @@ function Remove-UsersFromUnknownFacilities {
     $validUsers = @()
     ## Go through each user and only return users with facilities in our list
     foreach($User in $UserList) {
-        if ($facilityIds.Contains($User.BaseFacilityId)) {
+        if ($facilityIds.Contains($User.BaseSchoolDAN)) {
             $validUsers += $User
         }
         # Don't attempt to fall back to the additional school, because if a student
@@ -39,9 +39,9 @@ function Remove-DuplicateRecords {
     $validUsers = @()
 
     foreach($User in $UserList) {
-        if ($seenUserIds.Contains($User.UserId) -eq $false) {
+        if ($seenUserIds.Contains($User.StudentID) -eq $false) {
             $validUsers += $User
-            $seenUserIds.Add($User.UserId)
+            $seenUserIds.Add($User.StudentID)
         }
     }
 

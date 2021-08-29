@@ -155,7 +155,7 @@ try {
 
         foreach($Facility in $Facilities)
         {
-            if ($Facility.FacilityId -eq $NewUser.BaseFacilityId)
+            if ($Facility.FacilityId -eq $NewUser.BaseSchoolDAN)
             {
                 $ThisUserFacility = $Facility
             }
@@ -228,7 +228,7 @@ try {
 
         foreach($Facility in $Facilities)
         {
-            if ($Facility.FacilityId -eq $NewUser.BaseFacilityId)
+            if ($Facility.FacilityId -eq $NewUser.BaseSchoolDAN)
             {
                 $ThisUserFacility = $Facility
             }
