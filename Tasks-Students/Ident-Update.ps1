@@ -205,12 +205,16 @@ try {
             ## #####################################################################
             foreach($ADUser in Get-ADUser -Filter {(EmployeeId -eq $EmpID) -and ((EmployeeType -eq $ActiveEmployeeType) -or (EmployeeType -eq $DeprovisionedEmployeeType))} -Properties displayName,Department,Company,Office,employeeNumber)
             {
-                 ## #####################################################################
+                ## #####################################################################
                 ## # Learning ID (Stored as EmployeeNumber)
                 ## #####################################################################
-                if ($LearningID -ne $ADUser.employeeNumber) {
-                    Write-Log "Updating learning ID (employee number) for $($ADUser.userprincipalname) from $($ADUser.employeeNumber) to $LearningID"
-                    set-aduser -Identity $ADUser -EmployeeNumber $LearningID
+                if ($null -ne $LearningID) {
+                    if ($LearningID.Length -gt 1) {
+                        if ($LearningID -ne $ADUser.employeeNumber) {
+                            Write-Log "Updating learning ID (employee number) for $($ADUser.userprincipalname) from $($ADUser.employeeNumber) to $LearningID"
+                            set-aduser -Identity $ADUser -EmployeeNumber $LearningID
+                        }
+                    }
                 }
 
                 ## #####################################################################
