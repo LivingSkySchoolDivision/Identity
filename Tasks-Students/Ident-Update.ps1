@@ -195,10 +195,8 @@ try {
 
                 if ($ExpectedCN -ne $ADUser.cn)
                 {
-                    $NewCN = "$($FirstName.ToLower()) $($LastName.ToLower()) $($StudentID)"
-
-                    Write-Log "Updating CN for user '$ExpectedCN' to '$NewCN'"
-                    $ADUser | rename-adobject -NewName $NewCN                    
+                    Write-Log "Updating CN for user '$($ADUser.cn)' to '$NewCN'"
+                    $ADUser | rename-adobject -NewName $ExpectedCN                     
                 }
             }
             
