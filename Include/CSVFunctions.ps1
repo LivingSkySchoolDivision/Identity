@@ -12,7 +12,7 @@ function Get-Facilities {
         [Parameter(Mandatory=$true)][String] $CSVFile
     )
 
-    return import-csv $CSVFile -header('Name','FacilityDAN','FacilityId','DefaultAccountEnabled','ADOU','Groups') | Select -skip 1
+    return import-csv $CSVFile -header("Name","MSSFacilityName","FacilityDAN","FacilityId","DefaultAccountEnabled","ADOU","Groups") | Select -skip 1
 }
 
 function Get-CSVData {
