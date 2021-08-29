@@ -104,7 +104,7 @@ try {
         $FirstName = $SourceUser.PreferredFirstName
         $LastName = $SourceUser.PreferredLastName
         $Grade = $SourceUser.GradeLevel
-        $StudentID = $SourceUser.StudentID
+        $StudentID = $SourceUser.PupilNo
 
         # Check for missing preferred names
         if ($FirstName.Length -lt 1) {
@@ -155,9 +155,9 @@ try {
             ## # Check if the user needs to be moved        
             ## #####################################################################
             
-            if ($ADUsersWithParentOUs.ContainsKey($SourceUser.StudentID))
+            if ($ADUsersWithParentOUs.ContainsKey($SourceUser.PupilNo))
             {
-                $CurrentOU = [string]($ADUsersWithParentOUs[$SourceUser.StudentID])
+                $CurrentOU = [string]($ADUsersWithParentOUs[$SourceUser.PupilNo])
                 $ExpectedOU = [string]$BaseFacility.ADOU
 
                 if ($CurrentOU.ToLower() -ne $ExpectedOU.ToLower())
@@ -165,7 +165,7 @@ try {
                     Write-Log "Moving $FirstName $LastName $StudentID from $CurrentOU to $ExpectedOU..."
 
                     # Find the ADUser object
-                    $EmpID = $SourceUser.StudentID
+                    $EmpID = $SourceUser.PupilNo
                     foreach($ADUser in Get-ADUser -Filter { (employeeId -eq $EmpID) -AND (employeeType -eq $ActiveEmployeeType)})
                     {
                         Write-Log " > Stripping existing groups..."

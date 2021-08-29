@@ -39,9 +39,9 @@ function Remove-DuplicateRecords {
     $validUsers = @()
 
     foreach($User in $UserList) {
-        if ($seenUserIds.Contains($User.StudentID) -eq $false) {
+        if ($seenUserIds.Contains($User.PupilNo) -eq $false) {
             $validUsers += $User
-            $seenUserIds.Add($User.StudentID)
+            $seenUserIds.Add($User.PupilNo)
         }
     }
 

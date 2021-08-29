@@ -89,7 +89,7 @@ try {
         $FirstName = $SourceUser.PreferredFirstName
         $LastName = $SourceUser.PreferredLastName
         $Grade = $SourceUser.GradeLevel
-        $StudentID = $SourceUser.StudentID
+        $StudentID = $SourceUser.PupilNo
 
         # Check for missing preferred names
         if ($FirstName.Length -lt 1) {
@@ -162,7 +162,7 @@ try {
                     }
                     $AllUsernames = $newAllUsernames
 
-                    $NewUsername = New-Username -FirstName $FirstName -LastName $LastName -UserId $SourceUser.StudentID -ExistingUsernames $AllUsernames
+                    $NewUsername = New-Username -FirstName $FirstName -LastName $LastName -UserId $SourceUser.PupilNo -ExistingUsernames $AllUsernames
                     $NewEmail = "$($NewUsername)@$($EmailDomain)"
 
                     # Insert the new username into the list

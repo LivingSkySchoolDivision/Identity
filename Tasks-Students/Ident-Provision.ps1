@@ -87,7 +87,7 @@ try {
         # Find users in Source (import file) that don't exist in AD
         foreach($SourceUser in $SourceUsers)
         {
-            if ($ExistingActiveEmployeeIds.Contains($SourceUser.StudentID) -eq $false)
+            if ($ExistingActiveEmployeeIds.Contains($SourceUser.PupilNo) -eq $false)
             {
                 $UsersToProvision += $SourceUser
             }
@@ -107,7 +107,7 @@ try {
     {
         foreach($SourceUser in $UsersToProvision)
         {
-            if ($ExistingDeprovisionedEmployeeIDs.Contains($SourceUser.StudentID) -eq $true)
+            if ($ExistingDeprovisionedEmployeeIDs.Contains($SourceUser.PupilNo) -eq $true)
             {
                 $UsersToReProvision += $SourceUser
             }
@@ -153,7 +153,7 @@ try {
         $FirstName = $NewUser.PreferredFirstName
         $LastName = $NewUser.PreferredLastName
         $Grade = $NewUser.GradeLevel
-        $StudentID = $NewUser.StudentID
+        $StudentID = $NewUser.PupilNo
 
         # Check for missing preferred names
         if ($FirstName.Length -lt 1) {
@@ -208,7 +208,7 @@ try {
                 }
 
                 # Initial password
-                $Password = "$($FirstName.Substring(0,1).ToLower())$($LastName.Substring(0,1).ToLower())-$($NewUser.StudentID)"
+                $Password = "$($FirstName.Substring(0,1).ToLower())$($LastName.Substring(0,1).ToLower())-$($NewUser.PupilNo)"
                 $SecurePassword = ConvertTo-SecureString -String $Password -AsPlainText -Force
 
                 # Create the user
