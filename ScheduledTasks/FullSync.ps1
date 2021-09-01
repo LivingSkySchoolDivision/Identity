@@ -1,23 +1,11 @@
-## #########################################################
-## # This script is designed to be run as a scheduled task.
-## #
-## # It should be run as a user that has permission to 
-## # add/update/remove users in AD, in the OUs that this
-## # system is set up to manage.
-## #
-## # DO NOT SET THIS SCRIPT UP TO RUN AS A DOMAIN ADMIN.
-## # Create a service account, MSA, or gMSA, and delegate
-## # AD permissions to it for the OUs that it will manage.
-## #
-## # You should run this script with the "working directory"
-## # set to the directory this script is in.
-## #########################################################
+param (
+    [Parameter(Mandatory=$true)][string]$FacilityFile,
+    [Parameter(Mandatory=$true)][string]$ConfigFile,
+    [Parameter(Mandatory=$true)][string]$LogDirectory,
+    [Parameter(Mandatory=$true)][string]$InputFile
+)
 
-$ConfigFilePath = "../config.xml"
-$InFilePath = "../In/students.csv"
-$FacilityFilePath = "../db/facilities.csv"
-$LogFilePath = "../Logs/"
-$JobNameNoSpaces = "FullSync"
+$JobNameNoSpaces = "IdentityFullSync"
 
 # Include this library file, because we want to use Write-Log
 . ./../Include/UtilityFunctions.ps1
@@ -44,10 +32,10 @@ function Get-FullTimeStamp
     return $timestamp
 }
 
-$LogFile = Join-Path $LogFilePath ((Get-FullTimeStamp) + "-$JobNameNoSpaces.log")
-if ((Test-Path $LogFilePath) -eq $false) {
-    Write-Log "Creating log file directory at $LogFilePath"
-    New-Item -Path $LogFilePath -ItemType Directory
+$LogFile = Join-Path $LogDirectory ((Get-FullTimeStamp) + "-$JobNameNoSpaces.log")
+if ((Test-Path $LogDirectory) -eq $false) {
+    Write-Log "Creating log file directory at $LogDirectory"
+    New-Item -Path $LogDirectory -ItemType Directory
 }
 
 Write-Host "Logging to $LogFile"
@@ -57,7 +45,7 @@ Write-Log "Starting $JobNameNoSpaces script..." >> $LogFile
 ## #########################################################
 
 # Make sure config file exists
-if ((Test-Path $ConfigFilePath) -eq $false) {
+if ((Test-Path $ConfigFile) -eq $false) {
     Write-Log "Config file not found. exiting." >> $LogFile
     Write-Log "Finished full sync script with errors." >> $LogFile
     set-location $OldLocation
@@ -65,7 +53,7 @@ if ((Test-Path $ConfigFilePath) -eq $false) {
 }
 
 # Make sure facilities file exists
-if ((Test-Path $FacilityFilePath) -eq $false) {
+if ((Test-Path $FacilityFile) -eq $false) {
     Write-Log "Facilities file not found. exiting." >> $LogFile
     Write-Log "Finished full sync script with errors." >> $LogFile
     set-location $OldLocation
@@ -73,9 +61,9 @@ if ((Test-Path $FacilityFilePath) -eq $false) {
 }
 
 # If student file exists, delete it
-if ((Test-Path $InFilePath) -eq $true) {
-    Write-Log "Student file found ($InFilePath) - deleting." >> $LogFile
-    remove-item $InFilePath
+if ((Test-Path $InputFile) -eq $true) {
+    Write-Log "Student file found ($InputFile) - deleting." >> $LogFile
+    remove-item $InputFile
 }
 
 ## #########################################################
@@ -84,7 +72,7 @@ if ((Test-Path $InFilePath) -eq $true) {
 
 Write-Log "Calling SIS export script..." >> $LogFile
 try {
-    powershell -NoProfile -File ../sis-SchoolLogic/export-students-schoollogic.ps1 -ConfigFile $ConfigFilePath -OutFile $InFilePath >> $LogFile
+    powershell -NoProfile -File ../sis-SchoolLogic/export-students-schoollogic.ps1 -ConfigFile $ConfigFile -OutFile $InputFile >> $LogFile
 } 
 catch {
     Write-Log "Exception running move/update script."
@@ -96,8 +84,8 @@ catch {
 ## # before continuing...
 ## #########################################################
 
-if ((Test-Path $InFilePath) -eq $false) {
-    Write-Log "Student file found ($InFilePath) - cannot proceed." >> $LogFile
+if ((Test-Path $InputFile) -eq $false) {
+    Write-Log "Student file found ($InputFile) - cannot proceed." >> $LogFile
     Write-Log "Finished full sync script with errors." >> $LogFile
     set-location $OldLocation
     exit
@@ -109,7 +97,7 @@ if ((Test-Path $InFilePath) -eq $false) {
 
 Write-Log "Calling Provision script..." >> $LogFile
 try {
-    powershell -NoProfile -File ../Tasks-Students/Ident-Provision.ps1 -ConfigFile $ConfigFilePath -SISExportFile $InFilePath -FacilityFile $FacilityFilePath >> $LogFile
+    powershell -NoProfile -File ../Tasks-Students/Ident-Provision.ps1 -ConfigFile $ConfigFile -SISExportFile $InputFile -FacilityFile $FacilityFile >> $LogFile
 } 
 catch {
     Write-Log "Exception running move/update script."
@@ -122,7 +110,7 @@ catch {
 
 Write-Log "Calling Deprovision script..." >> $LogFile
 try {
-    powershell -NoProfile -File ../Tasks-Students/Ident-DeProvision.ps1 -ConfigFile $ConfigFilePath -SISExportFile $InFilePath -FacilityFile $FacilityFilePath >> $LogFile
+    powershell -NoProfile -File ../Tasks-Students/Ident-DeProvision.ps1 -ConfigFile $ConfigFile -SISExportFile $InputFile -FacilityFile $FacilityFile >> $LogFile
 } 
 catch {
     Write-Log "Exception running move/update script."
@@ -135,7 +123,7 @@ catch {
 
 Write-Log "Calling Move script..." >> $LogFile
 try {
-    powershell -NoProfile -File ../Tasks-Students/Ident-Move.ps1 -ConfigFile $ConfigFilePath -SISExportFile $InFilePath -FacilityFile $FacilityFilePath >> $LogFile
+    powershell -NoProfile -File ../Tasks-Students/Ident-Move.ps1 -ConfigFile $ConfigFile -SISExportFile $InputFile -FacilityFile $FacilityFile >> $LogFile
 } 
 catch {
     Write-Log "Exception running move script."
@@ -148,7 +136,7 @@ catch {
 
 Write-Log "Calling Update script..." >> $LogFile
 try {
-    powershell -NoProfile -File ../Tasks-Students/Ident-Update.ps1 -ConfigFile $ConfigFilePath -SISExportFile $InFilePath -FacilityFile $FacilityFilePath >> $LogFile
+    powershell -NoProfile -File ../Tasks-Students/Ident-Update.ps1 -ConfigFile $ConfigFile -SISExportFile $InputFile -FacilityFile $FacilityFile >> $LogFile
 } 
 catch {
     Write-Log "Exception running update script."
@@ -162,7 +150,7 @@ catch {
 
 Write-Log "Calling SIS change import script..." >> $LogFile
 try {
-    powershell -NoProfile -File ../sis-SchoolLogic/import-studentdata-schoollogic.ps1 -ConfigFile $ConfigFilePath -SISExportFile $InFilePath >> $LogFile
+    powershell -NoProfile -File ../sis-SchoolLogic/import-studentdata-schoollogic.ps1 -ConfigFile $ConfigFile -SISExportFile $InputFile >> $LogFile
 } 
 catch {
     Write-Log "Exception running SIS change import script."
@@ -171,16 +159,9 @@ catch {
 
 
 ## #########################################################
-## # Clean up
+## # Finished
 ## #########################################################
 
-Write-Log "Cleaning up..." >> $LogFile
-
-# Delete the student file
-if ((Test-Path $InFilePath) -eq $true) {
-    Write-Log "Deleting $InFilePath"
-    remove-item $InFilePath
-}
 Write-Log "Finished $JobNameNoSpaces script." >> $LogFile
 set-location $OldLocation
 exit
