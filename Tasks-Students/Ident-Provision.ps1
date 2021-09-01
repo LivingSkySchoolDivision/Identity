@@ -22,11 +22,174 @@ param (
 ## # No user configurable stuff beyond this point   #
 ## ##################################################
 
-## Bring in functions from external files
-. ./../Include/UtilityFunctions.ps1
-. ./../Include/ADFunctions.ps1
-. ./../Include/CSVFunctions.ps1
+import-module ActiveDirectory
 
+function Write-Log
+{
+    param(
+        [Parameter(Mandatory=$true)] $Message
+    )
+
+    Write-Output "$(Get-Date -Format "yyyy-MM-dd HH:mm:ss K")> $Message"
+}
+function Get-SourceUsers {
+    param(
+        [Parameter(Mandatory=$true)][String] $CSVFile
+    )
+
+    return import-csv $CSVFile -header("PupilNo","SaskLearningID","LegalFirstName","LegalLastName","LegalMiddleName","PreferredFirstName","PreferredLastName","PreferredMiddleName","PrimaryEmail","AlternateEmail","BaseSchoolName","BaseSchoolDAN","EnrollmentStatus","GradeLevel","YOG","O365Authorisation","AcceptableUsePolicy","LegacyStudentID","GoogleDocsEmail") | Select -skip 1
+}
+function Get-Facilities {
+    param(
+        [Parameter(Mandatory=$true)][String] $CSVFile
+    )
+
+    return import-csv $CSVFile -header("Name","MSSFacilityName","FacilityDAN","DefaultAccountEnabled","ADOU","Groups") | Select -skip 1
+}
+function Remove-UsersFromUnknownFacilities {
+    param(
+        [Parameter(Mandatory=$true)] $FacilityList,
+        [Parameter(Mandatory=$true)] $UserList
+    )
+
+    ## Make a list<string> of facility ids to make checking easier
+    $facilityIds = New-Object Collections.Generic.List[String]
+    foreach($Facility in $FacilityList) {
+        if ($facilityIds.Contains($Facility.FacilityDAN) -eq $false) {
+            $facilityIds.Add($Facility.FacilityDAN)
+        }
+    }
+
+    $validUsers = @()
+    ## Go through each user and only return users with facilities in our list
+    foreach($User in $UserList) {
+        if ($facilityIds.Contains($User.BaseSchoolDAN)) {
+            $validUsers += $User
+        }
+        # Don't attempt to fall back to the additional school, because if a student
+        # has multiple outside enrolments and their base school isn't valid, 
+        # they'll be constantly moved back and forth as the file gets processed.
+        # This could happen with the increase in distance ed.
+        # A student will _need_ a valid base school.
+        # To combat this, we could potentially create a fake school in the facilities file
+        # and use that somehow.
+    }
+
+    return $validUsers
+}
+function Remove-DuplicateRecords {
+    param(
+        [Parameter(Mandatory=$true)] $UserList
+    )
+
+    $seenUserIds = New-Object Collections.Generic.List[String]
+    $validUsers = @()
+
+    foreach($User in $UserList) {
+        if ($seenUserIds.Contains($User.PupilNo) -eq $false) {
+            $validUsers += $User
+            $seenUserIds.Add($User.PupilNo)
+        }
+    }
+
+    return $validUsers
+}
+function Remove-NonAlphaCharacters {
+    param(
+        [Parameter(Mandatory=$true)][String] $InputString
+    )
+
+    return $InputString -replace '[^a-zA-Z0-9\.]',''
+}
+
+function New-Username 
+{
+    param(
+        [Parameter(Mandatory=$true)][String] $FirstName,
+        [Parameter(Mandatory=$true)][String] $LastName,
+        [Parameter(Mandatory=$true)][String] $UserId,
+        [Parameter(Mandatory=$true)] $ExistingUsernames
+    )
+
+    $newUsername = Remove-NonAlphaCharacters -InputString "$($FirstName.ToLower()).$($LastName.ToLower())"
+
+    # If it's longer than 19 characters
+
+    if ($newUsername.length -gt 19) 
+    {        
+        $newUsername = Remove-NonAlphaCharacters -InputString "$($FirstName.Substring(0,1).ToLower()).$($LastName.ToLower())"
+    }
+
+    # If it's still longer than 19 characters
+    if ($newUsername.length -gt 19) 
+    {        
+        $newUsername = Remove-NonAlphaCharacters -InputString "$($FirstName.Substring(0,1).ToLower()).$($LastName.Substring(0,17).ToLower())"
+    }
+
+    # If it exists already, start adding numbers    
+    if ($ExistingUsernames -Contains $newUsername) 
+    {
+        $tempUsername = $newUsername
+        $counter = 0
+        while($ExistingUsernames -Contains $tempUsername)
+        {
+            $counter++
+            $tempUsername = Remove-NonAlphaCharacters -InputString "$newUsername$counter"
+        }    
+        $newUsername = $tempUsername    
+    }
+   
+    return $newUsername
+}
+function Convert-GroupList
+{
+    param(
+        [Parameter(Mandatory=$true)] $GroupString
+    )
+
+    $GroupList = @()
+
+    foreach($str in $GroupString -Split ";")
+    {
+        if ($str.Trim().Length -gt 0)
+        {
+            $GroupList += $str.Trim()
+        }
+    }
+
+    return $GroupList
+
+}
+
+
+function Get-ADUsernames {
+    $ADUserNames = @()
+    foreach($ADUser in Get-ADUser -Filter * -Properties sAMAccountName -ResultPageSize 2147483647 -Server "wad1-lskysd.lskysd.ca")
+    {
+        if ($ADUserNames.Contains($ADUser.sAMAccountName) -eq $false) {
+            $ADUserNames += $ADUser.sAMAccountName.ToLower()
+        }
+    }
+    return $ADUserNames | Sort-Object
+}
+
+function Get-SyncableEmployeeIDs {
+    param(
+        [Parameter(Mandatory=$true)][String] $EmployeeType
+    )
+
+
+    $employeeIDs = New-Object Collections.Generic.List[String]
+
+    foreach ($ADUser in Get-ADUser -Filter 'EmployeeType -eq $EmployeeType' -Properties sAMAccountName, EmployeeID, employeeType -ResultPageSize 2147483647 -Server "wad1-lskysd.lskysd.ca") 
+    {      
+        if ($employeeIDs.Contains($ADUser.EmployeeID) -eq $false) {
+            $employeeIDs.Add($ADUser.EmployeeID)
+        }  
+    }    
+
+    return $employeeIDs
+}
 
 Write-Log "Start provision script..."
 try {

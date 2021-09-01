@@ -2,7 +2,6 @@ param (
     [Parameter(Mandatory=$true)][string]$ImportFile
  )
 
- . ./../Include/CSVFunctions.ps1
 import-module ActiveDirectory 
 
  <# 
@@ -10,6 +9,14 @@ import-module ActiveDirectory
 
 
  #>
+
+ function Get-CSVData {
+   param(
+       [Parameter(Mandatory=$true)][String] $CSVFile
+   )
+
+   return import-csv $CSVFile
+}
 
  $ImportFileRows = Get-CSVData -CSVFile $ImportFile
 
