@@ -14,10 +14,5 @@
   <ConnectionStrings>
     <SchoolLogic>DATABASE CONNECTION STRING GOES HERE</SchoolLogic>
   </ConnectionStrings>
-  <MySchoolSask>
-      <SFTPHost></SFTPHost>
-      <SFTPUsername></SFTPUsername>
-      <SFTPPassword></SFTPPassword>
-  </MySchoolSask>
   <LogFilePassword></LogFilePassword>
 </Settings>
