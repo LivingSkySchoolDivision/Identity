@@ -1,27 +1,11 @@
 param (
     [Parameter(Mandatory=$true)][string]$FacilityFile,
     [Parameter(Mandatory=$true)][string]$ConfigFile,
-    [Parameter(Mandatory=$true)][string]$LogDirectory,
+    [Parameter(Mandatory=$true)][string]$LogFilePath,
     [Parameter(Mandatory=$true)][string]$InputFile
 )
 
 $JobNameNoSpaces = "IdentityFullSync"
-
-## #########################################################
-## # Set script location so the relative paths all work
-## #########################################################
-
-$OldLocation = get-location
-set-location $PSScriptRoot
-
-## #########################################################
-## # Normalize input paths
-## #########################################################
-
-$ConfigFile = $(Resolve-Path $ConfigFile)
-$FacilityFile = $(Resolve-Path $FacilityFile)
-$LogFilePath = $(Resolve-Path $LogFilePath)
-$InputFile = $(Resolve-Path $InputFile)
 
 ## #########################################################
 ## # Functions
@@ -36,9 +20,6 @@ function Write-Log
     Write-Output "$(Get-Date -Format "yyyy-MM-dd HH:mm:ss K")> $Message"
 }
 
-## #########################################################
-## # Set up a filename for the logs
-## #########################################################
 function Get-FullTimeStamp 
 {
     $now=get-Date
@@ -51,10 +32,34 @@ function Get-FullTimeStamp
     return $timestamp
 }
 
-$LogFile = Join-Path $LogDirectory ((Get-FullTimeStamp) + "-$JobNameNoSpaces.log")
-if ((Test-Path $LogDirectory) -eq $false) {
-    Write-Log "Creating log file directory at $LogDirectory"
-    New-Item -Path $LogDirectory -ItemType Directory
+## #########################################################
+## # Normalize input paths
+## #########################################################
+
+$OldLocation = Get-Location
+$NormalizedConfigFile = $(Resolve-Path $ConfigFile)
+$NormalizedFacilityFile = $(Resolve-Path $FacilityFile)
+$NormalizedLogFilePath = $(Resolve-Path $LogFilePath)
+$NormalizedInputFile = $(Resolve-Path $InputFile)
+Set-Location $PSScriptRoot
+$NormalizedScriptRoot = Resolve-Path "../Tasks-Students"
+Set-Location $OldLocation
+
+Write-Log "Working Directory is: $OldLocation"
+Write-Log "Using config file: $NormalizedConfigFile"
+Write-Log "Using facility file: $NormalizedFacilityFile"
+Write-Log "Using log file path: $NormalizedLogFilePath"
+Write-Log "Using input file: $NormalizedInputFile"
+Write-Log "Using script root: $NormalizedScriptRoot"
+
+## #########################################################
+## # Set up a filename for the logs
+## #########################################################
+
+$LogFile = Join-Path $LogFilePath ((Get-FullTimeStamp) + "-$JobNameNoSpaces.log")
+if ((Test-Path $LogFilePath) -eq $false) {
+    Write-Log "Creating log file directory at $LogFilePath"
+    New-Item -Path $LogFilePath -ItemType Directory
 }
 
 Write-Host "Logging to $LogFile"
@@ -64,7 +69,7 @@ Write-Log "Starting $JobNameNoSpaces script..." >> $LogFile
 ## #########################################################
 
 # Make sure config file exists
-if ((Test-Path $ConfigFile) -eq $false) {
+if ((Test-Path $NormalizedConfigFile) -eq $false) {
     Write-Log "Config file not found. exiting." >> $LogFile
     Write-Log "Finished full sync script with errors." >> $LogFile
     set-location $OldLocation
@@ -72,17 +77,11 @@ if ((Test-Path $ConfigFile) -eq $false) {
 }
 
 # Make sure facilities file exists
-if ((Test-Path $FacilityFile) -eq $false) {
+if ((Test-Path $NormalizedFacilityFile) -eq $false) {
     Write-Log "Facilities file not found. exiting." >> $LogFile
     Write-Log "Finished full sync script with errors." >> $LogFile
     set-location $OldLocation
     exit
-}
-
-# If student file exists, delete it
-if ((Test-Path $InputFile) -eq $true) {
-    Write-Log "Student file found ($InputFile) - deleting." >> $LogFile
-    remove-item $InputFile
 }
 
 ## #########################################################
@@ -90,7 +89,7 @@ if ((Test-Path $InputFile) -eq $true) {
 ## # before continuing...
 ## #########################################################
 
-if ((Test-Path $InputFile) -eq $false) {
+if ((Test-Path $NormalizedInputFile) -eq $false) {
     Write-Log "Student file found ($InputFile) - cannot proceed." >> $LogFile
     Write-Log "Finished full sync script with errors." >> $LogFile
     set-location $OldLocation
@@ -103,7 +102,8 @@ if ((Test-Path $InputFile) -eq $false) {
 
 Write-Log "Calling Provision script..." >> $LogFile
 try {
-    powershell -NoProfile -File ../Tasks-Students/Ident-Provision.ps1 -ConfigFile $ConfigFile -SISExportFile $InputFile -FacilityFile $FacilityFile >> $LogFile
+    $ScriptPath = Join-Path -Path $NormalizedScriptRoot -ChildPath "Ident-Provision.ps1"
+    powershell -NoProfile -File $ScriptPath -ConfigFile $NormalizedConfigFile -SISExportFile $NormalizedInputFile -FacilityFile $NormalizedFacilityFile >> $LogFile
 } 
 catch {
     Write-Log "Exception running move/update script."
@@ -116,7 +116,8 @@ catch {
 
 Write-Log "Calling Deprovision script..." >> $LogFile
 try {
-    powershell -NoProfile -File ../Tasks-Students/Ident-DeProvision.ps1 -ConfigFile $ConfigFile -SISExportFile $InputFile -FacilityFile $FacilityFile >> $LogFile
+    $ScriptPath = Join-Path -Path $NormalizedScriptRoot -ChildPath "Ident-DeProvision.ps1 "
+    powershell -NoProfile -File $ScriptPath -ConfigFile $NormalizedConfigFile -SISExportFile $NormalizedInputFile -FacilityFile $NormalizedFacilityFile >> $LogFile
 } 
 catch {
     Write-Log "Exception running move/update script."
@@ -129,7 +130,8 @@ catch {
 
 Write-Log "Calling Move script..." >> $LogFile
 try {
-    powershell -NoProfile -File ../Tasks-Students/Ident-Move.ps1 -ConfigFile $ConfigFile -SISExportFile $InputFile -FacilityFile $FacilityFile >> $LogFile
+    $ScriptPath = Join-Path -Path $NormalizedScriptRoot -ChildPath "Ident-Move.ps1"
+    powershell -NoProfile -File $ScriptPath -ConfigFile $NormalizedConfigFile -SISExportFile $NormalizedInputFile -FacilityFile $NormalizedFacilityFile >> $LogFile
 } 
 catch {
     Write-Log "Exception running move script."
@@ -137,32 +139,18 @@ catch {
 }
 
 ## #########################################################
-## # Update account groups and properties
+## # Update script
 ## #########################################################
 
 Write-Log "Calling Update script..." >> $LogFile
 try {
-    powershell -NoProfile -File ../Tasks-Students/Ident-Update.ps1 -ConfigFile $ConfigFile -SISExportFile $InputFile -FacilityFile $FacilityFile >> $LogFile
+    $ScriptPath = Join-Path -Path $NormalizedScriptRoot -ChildPath "Ident-Update.ps1"
+    powershell -NoProfile -File $ScriptPath -ConfigFile $NormalizedConfigFile -SISExportFile $NormalizedInputFile -FacilityFile $NormalizedFacilityFile >> $LogFile
 } 
 catch {
-    Write-Log "Exception running update script."
+    Write-Log "Exception running Update script."
     Write-Log $_
 }
-
-
-## #########################################################
-## # Reimport changes into SIS
-## #########################################################
-
-Write-Log "Calling SIS change import script..." >> $LogFile
-try {
-    powershell -NoProfile -File ../sis-SchoolLogic/import-studentdata-schoollogic.ps1 -ConfigFile $ConfigFile -SISExportFile $InputFile >> $LogFile
-} 
-catch {
-    Write-Log "Exception running SIS change import script."
-    Write-Log $_
-}
-
 
 ## #########################################################
 ## # Finished
