@@ -14,4 +14,5 @@
   <ConnectionStrings>
     <SchoolLogic>DATABASE CONNECTION STRING GOES HERE</SchoolLogic>
   </ConnectionStrings>
+  <LogFilePassword></LogFilePassword>
 </Settings>

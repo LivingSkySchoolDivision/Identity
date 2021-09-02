@@ -1,25 +1,11 @@
-## #########################################################
-## # This script is designed to be run as a scheduled task.
-## #
-## # It should be run as a user that has permission to 
-## # add/update/remove users in AD, in the OUs that this
-## # system is set up to manage.
-## #
-## # DO NOT SET THIS SCRIPT UP TO RUN AS A DOMAIN ADMIN.
-## # Create a service account, MSA, or gMSA, and delegate
-## # AD permissions to it for the OUs that it will manage.
-## #
-## # You should run this script with the "working directory"
-## # set to the directory this script is in.
-## #########################################################
+param (
+    [Parameter(Mandatory=$true)][string]$FacilityFile,
+    [Parameter(Mandatory=$true)][string]$ConfigFile,
+    [Parameter(Mandatory=$true)][string]$LogDirectory
+)
 
-$ConfigFilePath = "../config.xml"
-$InFilePath = "../In/students.csv"
-$LogFilePath = "../Logs/"
-$JobNameNoSpaces = "Cleanup"
+$JobNameNoSpaces = "IdentityCleanup"
 
-# Include this library file, because we want to use Write-Log
-. ./../Include/UtilityFunctions.ps1
 
 ## #########################################################
 ## # Set script location so the relative paths all work
@@ -28,6 +14,27 @@ $JobNameNoSpaces = "Cleanup"
 $OldLocation = get-location
 set-location $PSScriptRoot
 
+## #########################################################
+## # Normalize input paths
+## #########################################################
+
+$ConfigFile = $(Resolve-Path $ConfigFile)
+$FacilityFile = $(Resolve-Path $FacilityFile)
+$LogFilePath = $(Resolve-Path $LogFilePath)
+$InputFile = $(Resolve-Path $InputFile)
+
+## #########################################################
+## # Functions
+## #########################################################
+
+function Write-Log
+{
+    param(
+        [Parameter(Mandatory=$true)] $Message
+    )
+
+    Write-Output "$(Get-Date -Format "yyyy-MM-dd HH:mm:ss K")> $Message"
+}
 ## #########################################################
 ## # Set up a filename for the logs
 ## #########################################################
@@ -43,10 +50,10 @@ function Get-FullTimeStamp
     return $timestamp
 }
 
-$LogFile = Join-Path $LogFilePath ((Get-FullTimeStamp) + "-$JobNameNoSpaces.log")
-if ((Test-Path $LogFilePath) -eq $false) {
-    Write-Log "Creating log file directory at $LogFilePath"
-    New-Item -Path $LogFilePath -ItemType Directory
+$LogFile = Join-Path $LogDirectory ((Get-FullTimeStamp) + "-$JobNameNoSpaces.log")
+if ((Test-Path $LogDirectory) -eq $false) {
+    Write-Log "Creating log file directory at $LogDirectory"
+    New-Item -Path $LogDirectory -ItemType Directory
 }
 
 Write-Host "Logging to $LogFile"
@@ -64,17 +71,8 @@ if ((Test-Path $ConfigFilePath) -eq $false) {
 }
 
 ## #########################################################
-## # Run cleanup script
+## # Finished
 ## #########################################################
-
-Write-Log "Calling account cleanup script..." >> $LogFile
-try {
-    powershell -NoProfile -File ../Tasks-Students/Ident-Cleanup.ps1 -ConfigFile $ConfigFilePath >> $LogFile
-} 
-catch {
-    Write-Log "Exception running account cleanup script."
-    Write-Log $_
-}
 
 Write-Log "Finished $JobNameNoSpaces script." >> $LogFile
 set-location $OldLocation
