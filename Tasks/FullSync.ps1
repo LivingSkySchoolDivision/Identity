@@ -15,6 +15,15 @@ $OldLocation = get-location
 set-location $PSScriptRoot
 
 ## #########################################################
+## # Normalize input paths
+## #########################################################
+
+$ConfigFile = $(Resolve-Path $ConfigFile)
+$FacilityFile = $(Resolve-Path $FacilityFile)
+$LogFilePath = $(Resolve-Path $LogFilePath)
+$InputFile = $(Resolve-Path $InputFile)
+
+## #########################################################
 ## # Functions
 ## #########################################################
 

@@ -14,6 +14,14 @@ $JobNameNoSpaces = "IdentityQuickSync"
 $OldLocation = get-location
 set-location $PSScriptRoot
 
+## #########################################################
+## # Normalize input paths
+## #########################################################
+
+$ConfigFile = $(Resolve-Path $ConfigFile)
+$FacilityFile = $(Resolve-Path $FacilityFile)
+$LogFilePath = $(Resolve-Path $LogFilePath)
+$InputFile = $(Resolve-Path $InputFile)
 
 ## #########################################################
 ## # Functions
@@ -43,6 +51,7 @@ function Get-FullTimeStamp
 ## #########################################################
 ## # Set up a filename for the logs
 ## #########################################################
+
 
 $LogFile = Join-Path $LogFilePath ((Get-FullTimeStamp) + "-$JobNameNoSpaces.log")
 if ((Test-Path $LogFilePath) -eq $false) {
