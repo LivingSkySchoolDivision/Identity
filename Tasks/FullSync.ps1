@@ -86,19 +86,6 @@ if ((Test-Path $InputFile) -eq $true) {
 }
 
 ## #########################################################
-## # Export from SIS
-## #########################################################
-
-Write-Log "Calling SIS export script..." >> $LogFile
-try {
-    powershell -NoProfile -File ../sis-SchoolLogic/export-students-schoollogic.ps1 -ConfigFile $ConfigFile -OutFile $InputFile >> $LogFile
-} 
-catch {
-    Write-Log "Exception running move/update script."
-    Write-Log $_
-}
-
-## #########################################################
 ## # Make sure we have an "in" file to actually process
 ## # before continuing...
 ## #########################################################
