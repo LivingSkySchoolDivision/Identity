@@ -124,6 +124,17 @@ function New-Username
    
     return $newUsername
 }
+
+function New-CN {
+    param(
+        [Parameter(Mandatory=$true)][String] $FirstName,
+        [Parameter(Mandatory=$true)][String] $LastName,
+        [Parameter(Mandatory=$true)][String] $StudentNumber
+    )
+
+    return "$($FirstName -replace '[^a-zA-Z0-9\.\s-]','') $($LastName -replace '[^a-zA-Z0-9\.\s-]','') $($StudentNumber -replace '[^a-zA-Z0-9\.\s-]','')".ToLower()
+}
+
 function Convert-GroupList
 {
     param(
@@ -321,7 +332,7 @@ try {
                 ## # and email address for the user.
                 ## #####################################################################
 
-                $ExpectedCN = "$($FirstName.ToLower()) $($LastName.ToLower()) $StudentID"
+                $ExpectedCN = $(New-CN -FirstName $FirstName -LastName $LastName -StudentNumber $StudentID)
 
                 if ($ExpectedCN -ne $ADUser.cn)
                 {

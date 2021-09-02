@@ -97,7 +97,6 @@ function Convert-GroupList
 
 }
 
-
 function Get-ADUsernames {
     $ADUserNames = @()
     foreach($ADUser in Get-ADUser -Filter * -Properties sAMAccountName -ResultPageSize 2147483647 -Server "wad1-lskysd.lskysd.ca")

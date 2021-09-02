@@ -141,6 +141,17 @@ function New-Username
    
     return $newUsername
 }
+
+function New-CN {
+    param(
+        [Parameter(Mandatory=$true)][String] $FirstName,
+        [Parameter(Mandatory=$true)][String] $LastName,
+        [Parameter(Mandatory=$true)][String] $StudentNumber
+    )
+
+    return "$($FirstName -replace '[^a-zA-Z0-9\.\s-]','') $($LastName -replace '[^a-zA-Z0-9\.\s-]','') $($StudentNumber -replace '[^a-zA-Z0-9\.\s-]','')".ToLower()
+}
+
 function Convert-GroupList
 {
     param(
@@ -158,9 +169,7 @@ function Convert-GroupList
     }
 
     return $GroupList
-
 }
-
 
 function Get-ADUsernames {
     $ADUserNames = @()
@@ -351,7 +360,7 @@ try {
                 $DisplayName = "$FirstName $LastName"
 
                 # Make a CanonicalName
-                $CN = "$($FirstName.ToLower()) $($LastName.ToLower()) $($StudentID)"
+                $CN = $(New-CN -FirstName $FirstName -LastName $LastName -StudentNumber $StudentID)
 
                 # Generate a username for this user
                 $NewUsername = New-Username -FirstName $FirstName -LastName $LastName -UserId $StudentID -ExistingUsernames $AllUsernames
