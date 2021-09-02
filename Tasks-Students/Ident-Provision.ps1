@@ -1,7 +1,7 @@
 param (
     [Parameter(Mandatory=$true)][string]$SISExportFile,
     [Parameter(Mandatory=$true)][string]$FacilityFile,
-    [string]$ConfigFile
+    [Parameter(Mandatory=$true)][string]$ConfigFilePath
  )
 <#
     .SYNOPSIS

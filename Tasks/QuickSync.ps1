@@ -28,9 +28,6 @@ function Write-Log
     Write-Output "$(Get-Date -Format "yyyy-MM-dd HH:mm:ss K")> $Message"
 }
 
-## #########################################################
-## # Set up a filename for the logs
-## #########################################################
 function Get-FullTimeStamp 
 {
     $now=get-Date
@@ -42,6 +39,10 @@ function Get-FullTimeStamp
     $timestamp=$yr + "-" + $mo + "-" + $dy + "-" + $hr + $mi
     return $timestamp
 }
+
+## #########################################################
+## # Set up a filename for the logs
+## #########################################################
 
 $LogFile = Join-Path $LogFilePath ((Get-FullTimeStamp) + "-$JobNameNoSpaces.log")
 if ((Test-Path $LogFilePath) -eq $false) {
