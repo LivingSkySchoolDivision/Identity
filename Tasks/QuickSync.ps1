@@ -44,12 +44,12 @@ function Get-FullTimeStamp
 ## # Normalize input paths
 ## #########################################################
 
-$ConfigFile = $(Resolve-Path $ConfigFile)
-$FacilityFile = $(Resolve-Path $FacilityFile)
-$LogFilePath = $(Resolve-Path $LogFilePath)
-$InputFile = $(Resolve-Path $InputFile)
+$NormalizedConfigFile = $(Resolve-Path $ConfigFile)
+$NormalizedFacilityFile = $(Resolve-Path $FacilityFile)
+$NormalizedLogFilePath = $(Resolve-Path $LogFilePath)
+$NormalizedInputFile = $(Resolve-Path $InputFile)
 
-Write-Log "Using config file: $ConfigFile"
+Write-Log "Using config file: $NormalizedConfigFile"
 Write-Log "Using facility file: $FacilityFile"
 Write-Log "Using log file path: $LogFilePath"
 Write-Log "Using input file: $InputFile"
@@ -72,7 +72,7 @@ Write-Log "Starting $JobNameNoSpaces script..." >> $LogFile
 ## #########################################################
 
 # Make sure config file exists
-if ((Test-Path $ConfigFile) -eq $false) {
+if ((Test-Path $NormalizedConfigFile) -eq $false) {
     Write-Log "Config file not found. exiting." >> $LogFile
     Write-Log "Finished full sync script with errors." >> $LogFile
     set-location $OldLocation
@@ -80,7 +80,7 @@ if ((Test-Path $ConfigFile) -eq $false) {
 }
 
 # Make sure facilities file exists
-if ((Test-Path $FacilityFile) -eq $false) {
+if ((Test-Path $NormalizedFacilityFile) -eq $false) {
     Write-Log "Facilities file not found. exiting." >> $LogFile
     Write-Log "Finished full sync script with errors." >> $LogFile
     set-location $OldLocation
@@ -88,7 +88,7 @@ if ((Test-Path $FacilityFile) -eq $false) {
 }
 
 # If student file exists, delete it
-if ((Test-Path $InputFile) -eq $true) {
+if ((Test-Path $NormalizedInputFile) -eq $true) {
     Write-Log "Student file found ($InputFile) - deleting." >> $LogFile
     remove-item $InputFile
 }
@@ -98,7 +98,7 @@ if ((Test-Path $InputFile) -eq $true) {
 ## # before continuing...
 ## #########################################################
 
-if ((Test-Path $InputFile) -eq $false) {
+if ((Test-Path $NormalizedInputFile) -eq $false) {
     Write-Log "Student file found ($InputFile) - cannot proceed." >> $LogFile
     Write-Log "Finished full sync script with errors." >> $LogFile
     set-location $OldLocation
@@ -111,7 +111,7 @@ if ((Test-Path $InputFile) -eq $false) {
 
 Write-Log "Calling Provision script..." >> $LogFile
 try {
-    powershell -NoProfile -File ../Tasks-Students/Ident-Provision.ps1 -ConfigFile $ConfigFile -SISExportFile $InputFile -FacilityFile $FacilityFile >> $LogFile
+    powershell -NoProfile -File ../Tasks-Students/Ident-Provision.ps1 -ConfigFile $NormalizedConfigFile -SISExportFile $NormalizedInputFile -FacilityFile $NormalizedFacilityFile >> $LogFile
 } 
 catch {
     Write-Log "Exception running move/update script."
@@ -124,7 +124,7 @@ catch {
 
 Write-Log "Calling Deprovision script..." >> $LogFile
 try {
-    powershell -NoProfile -File ../Tasks-Students/Ident-DeProvision.ps1 -ConfigFile $ConfigFile -SISExportFile $InputFile -FacilityFile $FacilityFile >> $LogFile
+    powershell -NoProfile -File ../Tasks-Students/Ident-DeProvision.ps1 -ConfigFile $NormalizedConfigFile -SISExportFile $NormalizedInputFile -FacilityFile $NormalizedFacilityFile >> $LogFile
 } 
 catch {
     Write-Log "Exception running move/update script."
@@ -137,7 +137,7 @@ catch {
 
 Write-Log "Calling Move script..." >> $LogFile
 try {
-    powershell -NoProfile -File ../Tasks-Students/Ident-Move.ps1 -ConfigFile $ConfigFile -SISExportFile $InputFile -FacilityFile $FacilityFile >> $LogFile
+    powershell -NoProfile -File ../Tasks-Students/Ident-Move.ps1 -ConfigFile $NormalizedConfigFile -SISExportFile $NormalizedInputFile -FacilityFile $NormalizedFacilityFile >> $LogFile
 } 
 catch {
     Write-Log "Exception running move script."
@@ -150,7 +150,7 @@ catch {
 
 Write-Log "Calling SIS change import script..." >> $LogFile
 try {
-    powershell -NoProfile -File ../sis-SchoolLogic/import-studentdata-schoollogic.ps1 -ConfigFile $ConfigFile -SISExportFile $InputFile >> $LogFile
+    powershell -NoProfile -File ../sis-SchoolLogic/import-studentdata-schoollogic.ps1 -ConfigFile $NormalizedConfigFile -SISExportFile $NormalizedInputFile >> $NormalizedLogFile
 } 
 catch {
     Write-Log "Exception running SIS change import script."
