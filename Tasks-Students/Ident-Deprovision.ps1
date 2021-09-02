@@ -149,14 +149,16 @@ function Deprovision-User
 
 
 Write-Log "Start deprovision script..."
+Write-Log " Import file path: $SISExportFile"
+Write-Log " Facility file path: $FacilityFile"
+Write-Log " Config file path: $ConfigFile"
+
 try {
     ## Load config file
     if ((test-path -Path $ConfigFile) -eq $false) {
         Throw "Config file not found. Specify using -ConfigFile. Defaults to config.xml in the directory above where this script is run from."
     }
     $configXML = [xml](Get-Content $ConfigFile)
-
-    $configXML = [xml](Get-Content $AdjustedConfigFilePath)
     $ActiveEmployeeType = $configXml.Settings.Students.ActiveEmployeeType
     $DeprovisionedEmployeeType = $configXml.Settings.Students.DeprovisionedEmployeeType
     $DeprovisionedADOU = $configXml.Settings.Students.DeprovisionedADOU

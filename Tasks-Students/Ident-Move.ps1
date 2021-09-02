@@ -110,6 +110,10 @@ function Get-ADUsernames {
 
 
 Write-Log "Start move script..."
+Write-Log " Import file path: $SISExportFile"
+Write-Log " Facility file path: $FacilityFile"
+Write-Log " Config file path: $ConfigFile"
+
 try {
     ## Load config file
     if ((test-path -Path $ConfigFile) -eq $false) {
