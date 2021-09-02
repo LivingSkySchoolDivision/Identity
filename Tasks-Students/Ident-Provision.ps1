@@ -409,7 +409,12 @@ try {
     ## ############################################################
     Write-Log "Processing users to reprovision..."
     foreach($NewUser in $UsersToReProvision) 
-    {
+    { 
+        $FirstName = $SourceUser.PreferredFirstName
+        $LastName = $SourceUser.PreferredLastName
+        $Grade = $SourceUser.GradeLevel
+        $StudentID = $SourceUser.PupilNo
+
         $ThisUserFacility = $null
 
         foreach($Facility in $Facilities)
@@ -422,6 +427,8 @@ try {
 
         if ($null -ne $ThisUserFacility)
         {
+            Write-Log "Reprovisioning $FirstName $LastName $StudentID";
+
             # Based on the new facility, should the account be enabled or not?
             $AccountEnable = $false
             if (
@@ -433,6 +440,7 @@ try {
             {
                 $AccountEnable = $true
             }
+           
 
             # Find the user
             $EmpID = $StudentID
