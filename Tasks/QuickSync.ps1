@@ -51,8 +51,6 @@ Write-Log "Using facility file: $NormalizedFacilityFile"
 Write-Log "Using log file path: $NormalizedLogFilePath"
 Write-Log "Using input file: $NormalizedInputFile"
 Write-Log "Using script root: $NormalizedScriptRoot"
-exit
-
 
 ## #########################################################
 ## # Set up a filename for the logs
