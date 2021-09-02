@@ -6,8 +6,6 @@ param (
 
 $JobNameNoSpaces = "IdentityCleanup"
 
-# Include this library file, because we want to use Write-Log
-. ./../Include/UtilityFunctions.ps1
 
 ## #########################################################
 ## # Set script location so the relative paths all work
@@ -16,6 +14,18 @@ $JobNameNoSpaces = "IdentityCleanup"
 $OldLocation = get-location
 set-location $PSScriptRoot
 
+## #########################################################
+## # Functions
+## #########################################################
+
+function Write-Log
+{
+    param(
+        [Parameter(Mandatory=$true)] $Message
+    )
+
+    Write-Output "$(Get-Date -Format "yyyy-MM-dd HH:mm:ss K")> $Message"
+}
 ## #########################################################
 ## # Set up a filename for the logs
 ## #########################################################
