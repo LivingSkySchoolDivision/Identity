@@ -76,16 +76,11 @@ function Remove-UsersFromUnknownFacilities {
 Write-Log "Start cleanup script..."
 try {
     ## Load config file
-    $AdjustedConfigFilePath = $ConfigFilePath
-    if ($AdjustedConfigFilePath.Length -le 0)
-    {
-        $AdjustedConfigFilePath = join-path -Path $(Split-Path (Split-Path $MyInvocation.MyCommand.Path -Parent) -Parent) -ChildPath "config.xml"
+    if ((test-path -Path $ConfigFile) -eq $false) {
+        Throw "Config file not found. Specify using -ConfigFile. Defaults to config.xml in the directory above where this script is run from."
     }
+    $configXML = [xml](Get-Content $ConfigFile)
 
-    if ((test-path -Path $AdjustedConfigFilePath) -eq $false) {
-        Throw "Config file not found. Specify using -ConfigFilePath. Defaults to config.xml in the directory above where this script is run from."
-    }
-    $configXML = [xml](Get-Content $AdjustedConfigFilePath)
     $DeprovisionedEmployeeType = $configXml.Settings.Students.DeprovisionedEmployeeType
     $NotificationWebHookURL = $configXML.Settings.Notifications.WebHookURL
     $DisableCutoffDays = [int]$configXml.Settings.Students.DaysDeprovisionedUntilDisable

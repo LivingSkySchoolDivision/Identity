@@ -1,7 +1,7 @@
 param (
     [Parameter(Mandatory=$true)][string]$SISExportFile,
     [Parameter(Mandatory=$true)][string]$FacilityFile,
-    [Parameter(Mandatory=$true)][string]$ConfigFilePath
+    [Parameter(Mandatory=$true)][string]$ConfigFile
  )
 <#
     .SYNOPSIS
@@ -171,16 +171,11 @@ function Get-ADUsernames {
 Write-Log "Start update script (This script may take 20+ minutes to complete)..."
 try {
     ## Load config file
-    $AdjustedConfigFilePath = $ConfigFilePath
-    if ($AdjustedConfigFilePath.Length -le 0)
-    {
-        $AdjustedConfigFilePath = join-path -Path $(Split-Path (Split-Path $MyInvocation.MyCommand.Path -Parent) -Parent) -ChildPath "config.xml"
+    if ((test-path -Path $ConfigFile) -eq $false) {
+        Throw "Config file not found. Specify using -ConfigFile. Defaults to config.xml in the directory above where this script is run from."
     }
+    $configXML = [xml](Get-Content $ConfigFile)
 
-    if ((test-path -Path $AdjustedConfigFilePath) -eq $false) {
-        Throw "Config file not found. Specify using -ConfigFilePath. Defaults to config.xml in the directory above where this script is run from."
-    }
-    $configXML = [xml](Get-Content $AdjustedConfigFilePath)
     $EmailDomain = $configXml.Settings.Students.EmailDomain
     $ActiveEmployeeType = $configXml.Settings.Students.ActiveEmployeeType
     $DeprovisionedEmployeeType = $configXml.Settings.Students.DeprovisionedEmployeeType
