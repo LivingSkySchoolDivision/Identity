@@ -8,13 +8,6 @@ param (
 $JobNameNoSpaces = "IdentityQuickSync"
 
 ## #########################################################
-## # Set script location so the relative paths all work
-## #########################################################
-
-$OldLocation = get-location
-set-location $PSScriptRoot
-
-## #########################################################
 ## # Functions
 ## #########################################################
 
@@ -39,25 +32,31 @@ function Get-FullTimeStamp
     return $timestamp
 }
 
-
 ## #########################################################
 ## # Normalize input paths
 ## #########################################################
 
+$OldLocation = Get-Location
 $NormalizedConfigFile = $(Resolve-Path $ConfigFile)
 $NormalizedFacilityFile = $(Resolve-Path $FacilityFile)
 $NormalizedLogFilePath = $(Resolve-Path $LogFilePath)
 $NormalizedInputFile = $(Resolve-Path $InputFile)
+Set-Location $PSScriptRoot
+$NormalizedScriptRoot = Resolve-Path "../Tasks-Students"
+Set-Location $OldLocation
 
+Write-Log "Working Directory is: $OldLocation"
 Write-Log "Using config file: $NormalizedConfigFile"
-Write-Log "Using facility file: $FacilityFile"
-Write-Log "Using log file path: $LogFilePath"
-Write-Log "Using input file: $InputFile"
+Write-Log "Using facility file: $NormalizedFacilityFile"
+Write-Log "Using log file path: $NormalizedLogFilePath"
+Write-Log "Using input file: $NormalizedInputFile"
+Write-Log "Using script root: $NormalizedScriptRoot"
+exit
+
 
 ## #########################################################
 ## # Set up a filename for the logs
 ## #########################################################
-
 
 $LogFile = Join-Path $LogFilePath ((Get-FullTimeStamp) + "-$JobNameNoSpaces.log")
 if ((Test-Path $LogFilePath) -eq $false) {
@@ -87,12 +86,6 @@ if ((Test-Path $NormalizedFacilityFile) -eq $false) {
     exit
 }
 
-# If student file exists, delete it
-if ((Test-Path $NormalizedInputFile) -eq $true) {
-    Write-Log "Student file found ($InputFile) - deleting." >> $LogFile
-    remove-item $InputFile
-}
-
 ## #########################################################
 ## # Make sure we have an "in" file to actually process
 ## # before continuing...
@@ -111,7 +104,8 @@ if ((Test-Path $NormalizedInputFile) -eq $false) {
 
 Write-Log "Calling Provision script..." >> $LogFile
 try {
-    powershell -NoProfile -File ../Tasks-Students/Ident-Provision.ps1 -ConfigFile $NormalizedConfigFile -SISExportFile $NormalizedInputFile -FacilityFile $NormalizedFacilityFile >> $LogFile
+    $ScriptPath = Join-Path -Path $NormalizedScriptRoot -ChildPath "Ident-Provision.ps1"
+    powershell -NoProfile -File $ScriptPath -ConfigFile $NormalizedConfigFile -SISExportFile $NormalizedInputFile -FacilityFile $NormalizedFacilityFile >> $LogFile
 } 
 catch {
     Write-Log "Exception running move/update script."
@@ -124,7 +118,8 @@ catch {
 
 Write-Log "Calling Deprovision script..." >> $LogFile
 try {
-    powershell -NoProfile -File ../Tasks-Students/Ident-DeProvision.ps1 -ConfigFile $NormalizedConfigFile -SISExportFile $NormalizedInputFile -FacilityFile $NormalizedFacilityFile >> $LogFile
+    $ScriptPath = Join-Path -Path $NormalizedScriptRoot -ChildPath "Ident-DeProvision.ps1 "
+    powershell -NoProfile -File $ScriptPath -ConfigFile $NormalizedConfigFile -SISExportFile $NormalizedInputFile -FacilityFile $NormalizedFacilityFile >> $LogFile
 } 
 catch {
     Write-Log "Exception running move/update script."
@@ -137,23 +132,11 @@ catch {
 
 Write-Log "Calling Move script..." >> $LogFile
 try {
-    powershell -NoProfile -File ../Tasks-Students/Ident-Move.ps1 -ConfigFile $NormalizedConfigFile -SISExportFile $NormalizedInputFile -FacilityFile $NormalizedFacilityFile >> $LogFile
+    $ScriptPath = Join-Path -Path $NormalizedScriptRoot -ChildPath "Ident-Move.ps1"
+    powershell -NoProfile -File $ScriptPath -ConfigFile $NormalizedConfigFile -SISExportFile $NormalizedInputFile -FacilityFile $NormalizedFacilityFile >> $LogFile
 } 
 catch {
     Write-Log "Exception running move script."
-    Write-Log $_
-}
-
-## #########################################################
-## # Reimport changes into SIS
-## #########################################################
-
-Write-Log "Calling SIS change import script..." >> $LogFile
-try {
-    powershell -NoProfile -File ../sis-SchoolLogic/import-studentdata-schoollogic.ps1 -ConfigFile $NormalizedConfigFile -SISExportFile $NormalizedInputFile >> $NormalizedLogFile
-} 
-catch {
-    Write-Log "Exception running SIS change import script."
     Write-Log $_
 }
 
