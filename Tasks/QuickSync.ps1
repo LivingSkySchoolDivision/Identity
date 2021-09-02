@@ -15,15 +15,6 @@ $OldLocation = get-location
 set-location $PSScriptRoot
 
 ## #########################################################
-## # Normalize input paths
-## #########################################################
-
-$ConfigFile = $(Resolve-Path $ConfigFile)
-$FacilityFile = $(Resolve-Path $FacilityFile)
-$LogFilePath = $(Resolve-Path $LogFilePath)
-$InputFile = $(Resolve-Path $InputFile)
-
-## #########################################################
 ## # Functions
 ## #########################################################
 
@@ -47,6 +38,21 @@ function Get-FullTimeStamp
     $timestamp=$yr + "-" + $mo + "-" + $dy + "-" + $hr + $mi
     return $timestamp
 }
+
+
+## #########################################################
+## # Normalize input paths
+## #########################################################
+
+$ConfigFile = $(Resolve-Path $ConfigFile)
+$FacilityFile = $(Resolve-Path $FacilityFile)
+$LogFilePath = $(Resolve-Path $LogFilePath)
+$InputFile = $(Resolve-Path $InputFile)
+
+Write-Log "Using config file: $ConfigFile"
+Write-Log "Using facility file: $FacilityFile"
+Write-Log "Using log file path: $LogFilePath"
+Write-Log "Using input file: $InputFile"
 
 ## #########################################################
 ## # Set up a filename for the logs
