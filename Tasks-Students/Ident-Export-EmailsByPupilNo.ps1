@@ -19,7 +19,7 @@ function Write-Log
     Write-Output "$(Get-Date -Format "yyyy-MM-dd HH:mm:ss K")> $Message"
 }
 
-Write-Log "Start student email export (by pupil id) script..."
+Write-Log "Start student email export (by learning id) script..."
 try {
     ## Load config file
     if ((test-path -Path $ConfigFile) -eq $false) {
@@ -30,20 +30,22 @@ try {
     $DeprovisionedEmployeeType = $configXml.Settings.Students.DeprovisionedEmployeeType
     $NotificationWebHookURL = $configXML.Settings.Notifications.WebHookURL
 
+    # Detect the output file, and if it exists, delete it
+    if ((Test-Path $OutputFilename) -eq $true) {
+        Remove-Item $OutputFilename
+    }
+
     Write-Log "Exporting student data..."
 
     $ExportFileRows = @()
 
-    $AllUsers = Get-ADUser -filter {(employeeType -eq $ActiveEmployeeType) -or (employeeType -eq $DeprovisionedEmployeeType)} -ResultPageSize 2147483647 -properties mail,employeeId | where { $_.employeeId.length -gt 1}
+    $AllUsers = Get-ADUser -filter {(employeeType -eq $ActiveEmployeeType) -or (employeeType -eq $DeprovisionedEmployeeType)} -ResultPageSize 2147483647 -properties mail,employeeID | where { $_.employeeID.length -gt 1}
     foreach($User in $AllUsers)
     {
-       $ExportFileRows +=New-Object psobject -Property @{
-            "Pupil ID" = $User.employeeId
-            "Integration Email" = $User.mail
-        }
+       "$($User.employeeID),$($User.mail)" | Out-File $OutputFilename -Append
     }
 
-    $ExportFileRows | Select-Object "Pupil ID", "Integration Email" | Export-CSV $OutputFilename -NoTypeInformation
+    
 }
 catch {
     Write-Log "ERROR: $_"

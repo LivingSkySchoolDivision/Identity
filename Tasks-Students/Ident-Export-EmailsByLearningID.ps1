@@ -30,6 +30,11 @@ try {
     $DeprovisionedEmployeeType = $configXml.Settings.Students.DeprovisionedEmployeeType
     $NotificationWebHookURL = $configXML.Settings.Notifications.WebHookURL
 
+    # Detect the output file, and if it exists, delete it
+    if ((Test-Path $OutputFilename) -eq $true) {
+        Remove-Item $OutputFilename
+    }
+
     Write-Log "Exporting student data..."
 
     $ExportFileRows = @()
@@ -37,13 +42,10 @@ try {
     $AllUsers = Get-ADUser -filter {(employeeType -eq $ActiveEmployeeType) -or (employeeType -eq $DeprovisionedEmployeeType)} -ResultPageSize 2147483647 -properties mail,employeeNumber | where { $_.employeeNumber.length -gt 1}
     foreach($User in $AllUsers)
     {
-       $ExportFileRows +=New-Object psobject -Property @{
-            "Learning ID" = $User.employeeNumber
-            "Integration Email" = $User.mail
-        }
+       "$($User.employeeNumber),$($User.mail)" | Out-File $OutputFilename -Append
     }
 
-    $ExportFileRows | Select-Object "Learning ID", "Integration Email" | Export-CSV $OutputFilename -NoTypeInformation
+    
 }
 catch {
     Write-Log "ERROR: $_"
