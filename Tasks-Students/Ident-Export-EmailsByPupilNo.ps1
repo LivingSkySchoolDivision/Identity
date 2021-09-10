@@ -19,7 +19,7 @@ function Write-Log
     Write-Output "$(Get-Date -Format "yyyy-MM-dd HH:mm:ss K")> $Message"
 }
 
-Write-Log "Start student email export (by learning id) script..."
+Write-Log "Start student email export (by pupil id) script..."
 try {
     ## Load config file
     if ((test-path -Path $ConfigFile) -eq $false) {
