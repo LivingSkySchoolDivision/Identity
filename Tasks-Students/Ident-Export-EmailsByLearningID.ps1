@@ -40,9 +40,10 @@ try {
     $ExportFileRows = @()
 
     $AllUsers = Get-ADUser -filter {(employeeType -eq $ActiveEmployeeType) -or (employeeType -eq $DeprovisionedEmployeeType)} -ResultPageSize 2147483647 -properties mail,employeeNumber | where { $_.employeeNumber.length -gt 1}
+    "learningID,email`n" | Out-File $OutputFilename -Append -NoNewline -encoding utf8
     foreach($User in $AllUsers)
     {
-       "$($User.employeeNumber),$($User.mail)`n" | Out-File $OutputFilename -Append -NoNewline -encoding utf8
+        "$($User.employeeNumber),$($User.mail)`n" | Out-File $OutputFilename -Append -NoNewline -encoding utf8
     }
 
     
