@@ -42,7 +42,7 @@ try {
     $AllUsers = Get-ADUser -filter {(employeeType -eq $ActiveEmployeeType) -or (employeeType -eq $DeprovisionedEmployeeType)} -ResultPageSize 2147483647 -properties mail,employeeID | where { $_.employeeID.length -gt 1}
     foreach($User in $AllUsers)
     {
-       "$($User.employeeID),$($User.mail)" | Out-File $OutputFilename -Append
+       "$($User.employeeID),$($User.mail)`n" | Out-File $OutputFilename -Append -NoNewline -encoding utf8
     }
 
     
