@@ -98,8 +98,8 @@ function Remove-NonAlphaCharacters {
     param(
         [Parameter(Mandatory=$true)][String] $InputString
     )
-
-    return $InputString -replace '[^a-zA-Z0-9\.]',''
+    
+    return ($InputString -replace '[^a-zA-Z0-9\.]','') -replace '\.\.','.'
 }
 
 function New-Username 
