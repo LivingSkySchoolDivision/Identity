@@ -140,6 +140,9 @@ function Deprovision-User
 
         # Move user to deprovision OU
         move-ADObject -identity $Identity -TargetPath $DeprovisionOU 
+        
+        # Disable the account
+        Disable-ADAccount -Identity $Identity
     }
     catch {
         Write-Log "Failed to deprovision $Identity (exception follows)"
