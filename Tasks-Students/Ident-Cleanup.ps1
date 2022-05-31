@@ -90,37 +90,28 @@ try {
     $DisableCutoffDays = [int]$configXml.Settings.Students.DaysDeprovisionedUntilDisable
     $PurgeCutoffDays = [int]$configXml.Settings.Students.DaysDisabledBeforePurge
 
-    Write-Log "Finding stale deprovisioned accounts..."
-    foreach($User in Get-ADUser -filter {Enabled -eq $True -and employeeType -eq $DeprovisionedEmployeeType } -Property LastLogonTimestamp | Select-Object -Property Name,DistinguishedName,@{ n = "LastLogonDate"; e = { [datetime]::FromFileTime( $_.lastLogonTimestamp ) } })
-    {
-        # Parse the date
-        [datetime]$today = Get-Date
-        [datetime]$userLastLogonDate = New-Object DateTime
-        if ([DateTime]::TryParse($User.LastLogonDate,
-                                      [System.Globalization.CultureInfo]::InvariantCulture,
-                                      [System.Globalization.DateTimeStyles]::None,
-                                      [ref]$userLastLogonDate))
-        {
-            $UserDaysSinceLastLogin = New-TimeSpan -Start $userLastLogonDate -End $today
-            if ($UserDaysSinceLastLogin.TotalDays -gt $DisableCutoffDays)
-            {
-                $DepTime = Get-Date  
-                Write-Log "DISABLE: $($User.DistinguishedName) ($($UserDaysSinceLastLogin.TotalDays))"
-                Disable-ADAccount -Identity $User.DistinguishedName
-                Set-ADUser -Identity $User.DistinguishedName -Description "Disabled due to inactivity: $DepTime"
-            }
-        }
-    }
-
+    # Find any currently disabled accounts that have been untouched for the given amount of days
+    # and DELETE the accounts
     Write-Log "Stale disabled former student accounts:"
     $PurgeCutoffDay = (get-date).adddays([int]$PurgeCutoffDays * -1)
     Write-Log "Purge Cutoff day: $PurgeCutoffDay"
+
     foreach($User in Get-ADUser -filter {Enabled -eq $false -AND employeeType -eq $DeprovisionedEmployeeType -AND whenChanged -lt $PurgeCutoffDay} -Properties whenChanged)
     {
         Write-Log "PURGE: $($User.DistinguishedName)"
         Remove-ADUser -Identity $User
     }
-    
+
+    # Find any currently enabled accounts that have been untouched for the given amount of days
+    # and DISABLE them
+    Write-Log "Finding stale deprovisioned accounts..."
+    $DisableCutOffDate = (get-date).adddays([int]$DisableCutoffDays * -1)
+    Write-Log "Disable cutoff day: $DisableCutOffDate"
+    foreach($User in Get-ADUser -filter {Enabled -eq $True -and employeeType -eq $DeprovisionedEmployeeType -AND whenChanged -lt $DisableCutOffDate } -Property whenChanged)
+    {
+        Write-Log "DISABLE: $($User.DistinguishedName)"
+        Disable-ADAccount -Identity $User.DistinguishedName
+    }
  
     ## Send teams webhook notification
 
