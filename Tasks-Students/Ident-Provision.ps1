@@ -298,6 +298,16 @@ try {
     Write-Log "Found $($UsersToReProvision.Count) deprovisioned users to reactivate."
     Write-Log "Adjusted to $($UsersToProvision.Count) users to create"
 
+    foreach($User in $UsersToProvision) 
+    {
+        Write-Log "Will create new user: " $User.PupilNo        
+    }
+    
+    foreach($User in $UsersToReProvision) 
+    {
+        Write-Log "Will re-provision user: " $User.PupilNo          
+    }
+
     
     ## ############################################################
     ## Stop if there's nothing to do
@@ -410,10 +420,10 @@ try {
     Write-Log "Processing users to reprovision..."
     foreach($NewUser in $UsersToReProvision) 
     { 
-        $FirstName = $SourceUser.PreferredFirstName
-        $LastName = $SourceUser.PreferredLastName
-        $Grade = $SourceUser.GradeLevel
-        $StudentID = $SourceUser.PupilNo
+        $FirstName = $NewUser.PreferredFirstName
+        $LastName = $NewUser.PreferredLastName
+        $Grade = $NewUser.GradeLevel
+        $StudentID = $NewUser.PupilNo
 
         $ThisUserFacility = $null
 
@@ -423,6 +433,11 @@ try {
             {
                 $ThisUserFacility = $Facility
             }
+        }
+
+        if ($null -eq $ThisUserFacility)
+        {
+            Write-Log "Unknown facility DAN: " $NewUser.BaseSchoolDAN
         }
 
         if ($null -ne $ThisUserFacility)
