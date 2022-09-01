@@ -67,7 +67,7 @@ function Remove-UsersFromUnknownFacilities {
             $validUsers += $User
         }
         # Don't attempt to fall back to the additional school, because if a student
-        # has multiple outside enrolments and their base school isn't valid, 
+        # has multiple outside enrolments and their base school isn't valid,
         # they'll be constantly moved back and forth as the file gets processed.
         # This could happen with the increase in distance ed.
         # A student will _need_ a valid base school.
@@ -98,11 +98,11 @@ function Remove-NonAlphaCharacters {
     param(
         [Parameter(Mandatory=$true)][String] $InputString
     )
-    
+
     return ($InputString -replace '[^a-zA-Z0-9\.]','') -replace '\.\.','.'
 }
 
-function New-Username 
+function New-Username
 {
     param(
         [Parameter(Mandatory=$true)][String] $FirstName,
@@ -115,19 +115,19 @@ function New-Username
 
     # If it's longer than 19 characters
 
-    if ($newUsername.length -gt 19) 
-    {        
+    if ($newUsername.length -gt 19)
+    {
         $newUsername = Remove-NonAlphaCharacters -InputString "$($FirstName.Substring(0,1).ToLower()).$($LastName.ToLower())"
     }
 
     # If it's still longer than 19 characters
-    if ($newUsername.length -gt 19) 
-    {        
+    if ($newUsername.length -gt 19)
+    {
         $newUsername = Remove-NonAlphaCharacters -InputString "$($FirstName.Substring(0,1).ToLower()).$($LastName.Substring(0,17).ToLower())"
     }
 
-    # If it exists already, start adding numbers    
-    if ($ExistingUsernames -Contains $newUsername) 
+    # If it exists already, start adding numbers
+    if ($ExistingUsernames -Contains $newUsername)
     {
         $tempUsername = $newUsername
         $counter = 0
@@ -135,10 +135,10 @@ function New-Username
         {
             $counter++
             $tempUsername = Remove-NonAlphaCharacters -InputString "$newUsername$counter"
-        }    
-        $newUsername = $tempUsername    
+        }
+        $newUsername = $tempUsername
     }
-   
+
     return $newUsername
 }
 
@@ -190,12 +190,12 @@ function Get-SyncableEmployeeIDs {
 
     $employeeIDs = New-Object Collections.Generic.List[String]
 
-    foreach ($ADUser in Get-ADUser -Filter 'EmployeeType -eq $EmployeeType' -Properties sAMAccountName, EmployeeID, employeeType -ResultPageSize 2147483647 -Server "wad1-lskysd.lskysd.ca") 
-    {      
+    foreach ($ADUser in Get-ADUser -Filter 'EmployeeType -eq $EmployeeType' -Properties sAMAccountName, EmployeeID, employeeType -ResultPageSize 2147483647 -Server "wad1-lskysd.lskysd.ca")
+    {
         if ($employeeIDs.Contains($ADUser.EmployeeID) -eq $false) {
             $employeeIDs.Add($ADUser.EmployeeID)
-        }  
-    }    
+        }
+    }
 
     return $employeeIDs
 }
@@ -211,7 +211,7 @@ try {
         Throw "Config file not found. Specify using -ConfigFile. Defaults to config.xml in the directory above where this script is run from."
     }
     $configXML = [xml](Get-Content $ConfigFile)
-    
+
     $EmailDomain = $configXml.Settings.Students.EmailDomain
     $ActiveEmployeeType = $configXml.Settings.Students.ActiveEmployeeType
     $DeprovisionedEmployeeType = $configXml.Settings.Students.DeprovisionedEmployeeType
@@ -298,22 +298,22 @@ try {
     Write-Log "Found $($UsersToReProvision.Count) deprovisioned users to reactivate."
     Write-Log "Adjusted to $($UsersToProvision.Count) users to create"
 
-    foreach($User in $UsersToProvision) 
+    foreach($User in $UsersToProvision)
     {
-        Write-Log "Will create new user: " $User.PupilNo        
-    }
-    
-    foreach($User in $UsersToReProvision) 
-    {
-        Write-Log "Will re-provision user: " $User.PupilNo          
+        Write-Log "Will create new user: $($User.PupilNo) $($User.PreferredFirstName) $($User.PreferredLastName)"
     }
 
-    
+    foreach($User in $UsersToReProvision)
+    {
+        Write-Log "Will re-provision user: $($User.PupilNo) $($User.PreferredFirstName) $($User.PreferredLastName)"
+    }
+
+
     ## ############################################################
     ## Stop if there's nothing to do
     ## ############################################################
 
-    if (($UsersToProvision.Count -eq 0) -and ($UsersToReprovision.Count -eq 0)) 
+    if (($UsersToProvision.Count -eq 0) -and ($UsersToReprovision.Count -eq 0))
     {
         Write-Log "No work to do - exiting."
         exit
@@ -328,7 +328,7 @@ try {
 
     $IgnoredUsers = @()
     Write-Log "Processing new users..."
-    foreach($NewUser in $UsersToProvision) 
+    foreach($NewUser in $UsersToProvision)
     {
         # Parse the user's name
         $FirstName = $NewUser.PreferredFirstName
@@ -344,7 +344,6 @@ try {
         if ($LastName.Length -lt 1) {
             $LastName = $NewUser.LegalLastName
         }
-
 
         # Find the facility for this user
         $ThisUserFacility = $null
@@ -380,10 +379,10 @@ try {
                 # Should the user be enable or disabled by default (based on facility)
                 $AccountEnable = $false
                 if (
-                    ($ThisUserFacility.DefaultAccountEnabled.ToLower() -eq "true") -or 
-                    ($ThisUserFacility.DefaultAccountEnabled.ToLower() -eq "yes")  -or 
-                    ($ThisUserFacility.DefaultAccountEnabled.ToLower() -eq "y")  -or 
-                    ($ThisUserFacility.DefaultAccountEnabled.ToLower() -eq "t") 
+                    ($ThisUserFacility.DefaultAccountEnabled.ToLower() -eq "true") -or
+                    ($ThisUserFacility.DefaultAccountEnabled.ToLower() -eq "yes")  -or
+                    ($ThisUserFacility.DefaultAccountEnabled.ToLower() -eq "y")  -or
+                    ($ThisUserFacility.DefaultAccountEnabled.ToLower() -eq "t")
                 )
                 {
                     $AccountEnable = $true
@@ -402,7 +401,7 @@ try {
                     Add-ADGroupMember -Identity $grp -Members $NewUsername -Confirm:$false
                 }
 
-                # Add our new username to the list of existing usernames, in case 
+                # Add our new username to the list of existing usernames, in case
                 # we'd end up with a duplicate in this script with similar names
                 $AllUsernames += $NewUsername
 
@@ -418,8 +417,8 @@ try {
     ## Reprovision previously deprovisioned users
     ## ############################################################
     Write-Log "Processing users to reprovision..."
-    foreach($NewUser in $UsersToReProvision) 
-    { 
+    foreach($NewUser in $UsersToReProvision)
+    {
         $FirstName = $NewUser.PreferredFirstName
         $LastName = $NewUser.PreferredLastName
         $Grade = $NewUser.GradeLevel
@@ -447,15 +446,15 @@ try {
             # Based on the new facility, should the account be enabled or not?
             $AccountEnable = $false
             if (
-                ($ThisUserFacility.DefaultAccountEnabled.ToLower() -eq "true") -or 
-                ($ThisUserFacility.DefaultAccountEnabled.ToLower() -eq "yes")  -or 
-                ($ThisUserFacility.DefaultAccountEnabled.ToLower() -eq "y")  -or 
-                ($ThisUserFacility.DefaultAccountEnabled.ToLower() -eq "t") 
+                ($ThisUserFacility.DefaultAccountEnabled.ToLower() -eq "true") -or
+                ($ThisUserFacility.DefaultAccountEnabled.ToLower() -eq "yes")  -or
+                ($ThisUserFacility.DefaultAccountEnabled.ToLower() -eq "y")  -or
+                ($ThisUserFacility.DefaultAccountEnabled.ToLower() -eq "t")
             )
             {
                 $AccountEnable = $true
             }
-           
+
 
             # Find the user
             $EmpID = $StudentID
@@ -470,14 +469,14 @@ try {
                     # Don't remove from "domain users", because it won't let you do this anyway (its the user's "default group").
                     if ($Group.Name -ne "Domain Users")
                     {
-                        try 
+                        try
                         {
                             Remove-ADGroupMember -Identity $Group -Members $ADUser -Confirm:$false
                         }
                         catch {}
                     }
                 }
-                
+
                 # Add the user to groups for this facility
                 foreach($grp in (Convert-GroupList -GroupString $($ThisUserFacility.Groups)))
                 {
@@ -485,18 +484,18 @@ try {
                 }
 
                 # Actually move the user
-                move-ADObject -identity $ADUser -TargetPath $ThisUserFacility.ADOU    
-                                
+                move-ADObject -identity $ADUser -TargetPath $ThisUserFacility.ADOU
+
                 Write-Log "Reprovisioned user: CN=$($ADUser.CN),$($ThisUserFacility.ADOU)"
             }
         }
-    } 
+    }
 
 
     ## Send teams webhook notification
 
     ## Send email notification
-} 
+}
 catch {
     Write-Log "ERROR: $_"
 }
