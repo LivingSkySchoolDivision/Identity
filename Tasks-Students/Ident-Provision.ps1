@@ -32,6 +32,7 @@ function Write-Log
 
     Write-Output "$(Get-Date -Format "yyyy-MM-dd HH:mm:ss K")> $Message"
 }
+
 function Get-SourceUsers {
     param(
         [Parameter(Mandatory=$true)][String] $CSVFile
@@ -39,6 +40,7 @@ function Get-SourceUsers {
 
     return import-csv $CSVFile -header("PupilNo","SaskLearningID","LegalFirstName","LegalLastName","LegalMiddleName","PreferredFirstName","PreferredLastName","PreferredMiddleName","PrimaryEmail","AlternateEmail","BaseSchoolName","BaseSchoolDAN","EnrollmentStatus","GradeLevel","YOG","O365Authorisation","AcceptableUsePolicy","LegacyStudentID","GoogleDocsEmail") | Select -skip 1
 }
+
 function Get-Facilities {
     param(
         [Parameter(Mandatory=$true)][String] $CSVFile
@@ -46,6 +48,7 @@ function Get-Facilities {
 
     return import-csv $CSVFile -header("Name","MSSFacilityName","FacilityDAN","DefaultAccountEnabled","ADOU","Groups") | Select -skip 1
 }
+
 function Remove-UsersFromUnknownFacilities {
     param(
         [Parameter(Mandatory=$true)] $FacilityList,
@@ -77,7 +80,9 @@ function Remove-UsersFromUnknownFacilities {
 
     return $validUsers
 }
-function Remove-DuplicateRecords {
+
+function Remove-DuplicateRecords 
+{
     param(
         [Parameter(Mandatory=$true)] $UserList
     )
@@ -94,6 +99,13 @@ function Remove-DuplicateRecords {
 
     return $validUsers
 }
+
+function Remove-StringDiacritics
+{
+    PARAM ([string]$String)
+    [Text.Encoding]::ASCII.GetString([Text.Encoding]::GetEncoding("Cyrillic").GetBytes($String))
+}
+
 function Remove-NonAlphaCharacters {
     param(
         [Parameter(Mandatory=$true)][String] $InputString
@@ -142,7 +154,8 @@ function New-Username
     return $newUsername
 }
 
-function New-CN {
+function New-CN 
+{
     param(
         [Parameter(Mandatory=$true)][String] $FirstName,
         [Parameter(Mandatory=$true)][String] $LastName,
@@ -171,7 +184,8 @@ function Convert-GroupList
     return $GroupList
 }
 
-function Get-ADUsernames {
+function Get-ADUsernames 
+{
     $ADUserNames = @()
     foreach($ADUser in Get-ADUser -Filter * -Properties sAMAccountName -ResultPageSize 2147483647 -Server "wad1-lskysd.lskysd.ca")
     {
@@ -182,7 +196,8 @@ function Get-ADUsernames {
     return $ADUserNames | Sort-Object
 }
 
-function Get-SyncableEmployeeIDs {
+function Get-SyncableEmployeeIDs 
+{
     param(
         [Parameter(Mandatory=$true)][String] $EmployeeType
     )
@@ -331,18 +346,18 @@ try {
     foreach($NewUser in $UsersToProvision)
     {
         # Parse the user's name
-        $FirstName = $NewUser.PreferredFirstName
-        $LastName = $NewUser.PreferredLastName
+        $FirstName = Remove-StringDiacritics $NewUser.PreferredFirstName
+        $LastName = Remove-StringDiacritics $NewUser.PreferredLastName
         $Grade = $NewUser.GradeLevel
         $StudentID = $NewUser.PupilNo
         $LearningID = $NewUser.SaskLearningID
 
         # Check for missing preferred names
         if ($FirstName.Length -lt 1) {
-            $FirstName = $NewUser.LegalFirstName
+            $FirstName = Remove-StringDiacritics $NewUser.LegalFirstName
         }
         if ($LastName.Length -lt 1) {
-            $LastName = $NewUser.LegalLastName
+            $LastName = Remove-StringDiacritics $NewUser.LegalLastName
         }
 
         # Find the facility for this user

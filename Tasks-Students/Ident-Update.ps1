@@ -32,6 +32,7 @@ function Write-Log
 
     Write-Output "$(Get-Date -Format "yyyy-MM-dd HH:mm:ss K")> $Message"
 }
+
 function Get-SourceUsers {
     param(
         [Parameter(Mandatory=$true)][String] $CSVFile
@@ -39,6 +40,7 @@ function Get-SourceUsers {
 
     return import-csv $CSVFile -header("PupilNo","SaskLearningID","LegalFirstName","LegalLastName","LegalMiddleName","PreferredFirstName","PreferredLastName","PreferredMiddleName","PrimaryEmail","AlternateEmail","BaseSchoolName","BaseSchoolDAN","EnrollmentStatus","GradeLevel","YOG","O365Authorisation","AcceptableUsePolicy","LegacyStudentID","GoogleDocsEmail") | Select -skip 1
 }
+
 function Get-Facilities {
     param(
         [Parameter(Mandatory=$true)][String] $CSVFile
@@ -46,6 +48,7 @@ function Get-Facilities {
 
     return import-csv $CSVFile -header("Name","MSSFacilityName","FacilityDAN","DefaultAccountEnabled","ADOU","Groups") | Select -skip 1
 }
+
 function Remove-UsersFromUnknownFacilities {
     param(
         [Parameter(Mandatory=$true)] $FacilityList,
@@ -77,7 +80,15 @@ function Remove-UsersFromUnknownFacilities {
 
     return $validUsers
 }
-function Remove-NonAlphaCharacters {
+
+function Remove-StringDiacritics
+{
+    PARAM ([string]$String)
+    [Text.Encoding]::ASCII.GetString([Text.Encoding]::GetEncoding("Cyrillic").GetBytes($String))
+}
+
+function Remove-NonAlphaCharacters 
+{
     param(
         [Parameter(Mandatory=$true)][String] $InputString
     )
@@ -125,7 +136,8 @@ function New-Username
     return $newUsername
 }
 
-function New-CN {
+function New-CN 
+{
     param(
         [Parameter(Mandatory=$true)][String] $FirstName,
         [Parameter(Mandatory=$true)][String] $LastName,
@@ -155,8 +167,8 @@ function Convert-GroupList
 
 }
 
-
-function Get-ADUsernames {
+function Get-ADUsernames 
+{
     $ADUserNames = @()
     foreach($ADUser in Get-ADUser -Filter * -Properties sAMAccountName -ResultPageSize 2147483647 -Server "wad1-lskysd.lskysd.ca")
     {
@@ -226,18 +238,18 @@ try {
     foreach($SourceUser in $SourceUsers)
     {
         # Parse the user's name
-        $FirstName = $SourceUser.PreferredFirstName
-        $LastName = $SourceUser.PreferredLastName
+        $FirstName = Remove-StringDiacritics $SourceUser.PreferredFirstName
+        $LastName = Remove-StringDiacritics $SourceUser.PreferredLastName
         $Grade = $SourceUser.GradeLevel
         $StudentID = $SourceUser.PupilNo
         $LearningID = $SourceUser.SaskLearningID
 
         # Check for missing preferred names
         if ($FirstName.Length -lt 1) {
-            $FirstName = $SourceUser.LegalFirstName
+            $FirstName = Remove-StringDiacritics $SourceUser.LegalFirstName
         }
         if ($LastName.Length -lt 1) {
-            $LastName = $SourceUser.LegalLastName
+            $LastName = Remove-StringDiacritics $SourceUser.LegalLastName
         }
 
         # Find an account for this user in AD
