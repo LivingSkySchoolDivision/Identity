@@ -52,7 +52,7 @@ try {
     foreach($User in Get-ADUser -filter {Enabled -eq $false -AND employeeType -eq $DeprovisionedEmployeeType -AND whenChanged -lt $PurgeCutoffDay} -Properties whenChanged)
     {
         Write-Log "PURGE: $($User.DistinguishedName)"
-        Remove-ADUser -Confirm:$False -Identity $User
+        Get-ADUser -Identity $User.DistinguishedName | Remove-ADObject -Confirm:$False -Recursive
     }
 
     # Find any currently enabled accounts that have been untouched for the given amount of days
