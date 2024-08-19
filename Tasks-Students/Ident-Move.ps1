@@ -255,9 +255,9 @@ try {
                         {
                             try 
                             {
-                                if ($Group.Name -ne "Domain Users")
+                                if ($grp.Name -ne "Domain Users")
                                 {
-                                    Remove-ADGroupMember -Identity $Group -Members $ADUser -Confirm:$false
+                                    Remove-ADGroupMember -Identity $grp -Members $ADUser -Confirm:$false
                                 }
                             }
                             catch {}
